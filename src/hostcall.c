@@ -24,7 +24,7 @@
 #include <unistd.h>
 
 #include "main.h"
-#include "../m68000.h"
+#include "../host.h"
 #include "hostcall.h"
 #include "screen.h"
 #include "audio.h"
@@ -605,7 +605,9 @@ void Call_DumpRegs ()
 void Call_DumpDebug ()
 {
 	int i, j;
+# ifdef M68K_DEBUG
 	printf ("Debug info. PC @ 68k line %d.\n", line_no);
+#endif
 	
 	Call_DumpRegs ();
 	
@@ -662,6 +664,7 @@ static void SetExceptionHandler ()
 	exception_handlers[GetReg(0) & 31] = GetReg (8);
 }
 
+# ifdef M68K_DEBUG
 int DumpMess (int pos, int line)
 {
 	if (GetXFlag ()) putchar ('X');
@@ -688,6 +691,7 @@ int DumpMess (int pos, int line)
 			GetReg (14),
 			GetReg (15),line_no);
 }
+#endif
 static int _X, _Z, _N, _V, _C;
 static int PrevRegs[16];
 
@@ -705,6 +709,7 @@ int changed ()
 	return 0;
 }
 
+# ifdef M68K_DEBUG
 void DumpRegsChanged ()
 {
 	int i;
@@ -731,6 +736,7 @@ void DumpRegsChanged ()
 	}
 	printf (" @%d\n", line_no);
 }
+#endif
 
 static void Call_Fdelete ()
 {
@@ -893,7 +899,11 @@ HOSTCALL hcalls [] = {
 	&Call_PlayMusic,		/* 0x1d */
 	&Call_StopMusic,		/* 0x1e */
 	&Call_Idle,			/* 0x1f */
+# ifdef M68K_DEBUG
 	&Call_DumpDebug,		/* 0x20 */
+#else
+	NULL,
+#endif
 	&Call_IsMusicPlaying,
 	&Call_Fread,			/* 0x22 */
 	&Call_Fwrite,

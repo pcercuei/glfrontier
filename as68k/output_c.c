@@ -159,21 +159,27 @@ void c_begin (const char *src_filename, const char *bin_filename)
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
-	snprintf (buf, sizeof (buf), ".%s.fn.c", src_filename);
+	snprintf (buf, sizeof (buf), "%s.fn.c", src_filename);
 	if ((c_out2 = fopen (buf, "w"))==NULL) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
 
-	cout ("void Init680x0 () {\n");
+	cout ("int Init680x0 () {\n");
 	cln ("STRam = &m68kram[0];");
 	cln ("load_binfile (\"%s\");", bin_filename);
+	cln ("return 0;\n");
 	cout ("}\n");
 	
 	cout ("void Start680x0 ()\n{\n");
 	cout ("\ts32 i, jdest = 0x1c;\n");
 	cout ("\tRegs[15]._u32 = MEM_SIZE;\n\n");
 	cout ("jumptable:\n\tswitch (jdest) {\n");
+
+	SWAP_COUT;
+	cout ("#include \"host.h\"\n");
+	cout ("#include \"fixups.h\"\n");
+	SWAP_COUT;
 }
 
 void c_end (const char *src_filename)
@@ -195,25 +201,21 @@ void c_end (const char *src_filename)
 	fclose (c_out);
 	fclose (c_out2);
 
-	snprintf (buf, sizeof (buf), "%s.c", src_filename);
+	snprintf (buf, sizeof (buf), "fixups.h", src_filename);
 	if ((c_out = fopen (buf, "w"))==NULL) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
-
-	/* _host.c contains much necessary boilerplate code. include it */
-	cout ("#include \"_host.c\"\n");
 	
 	/* call prototype turds */
-	cout ("#ifdef PART1\n");
 	fix = fix_first;
 	for (; fix != NULL; fix = fix->next) {
 		if (fix->size == C_FUNC) {
-			cout ("extern void %s ();\n", fix->label);
+			cout ("void %s ();\n", fix->label);
 			continue;
 		}
 	}
-	cout ("#endif /* PART1 */\n");
+
 	/* address 'fixups' */
 	fix = fix_first;
 	for (; fix != NULL; fix = fix->next) {
@@ -226,9 +228,21 @@ void c_end (const char *src_filename)
 		}
 		cout ("#define __D%s (0x%x)\n", lab->name, lab->val+BASE);
 	}
+	fclose(c_out);
 
+	snprintf (buf, sizeof (buf), "%s.c", src_filename);
+	if ((c_out = fopen (buf, "w"))==NULL) {
+		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
+		exit (-1);
+	}
+
+	/* host.h contains much necessary boilerplate code. include it */
+	cout ("#include \"host.h\"\n");
+	cout ("#include \"fixups.h\"\n");
+
+#if 0
 	/* the code we made */
-	snprintf (buf, sizeof (buf), ".%s.fn.c", src_filename);
+	snprintf (buf, sizeof (buf), "%s.fn.c", src_filename);
 	if ((f = fopen (buf, "r"))==NULL) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
@@ -238,13 +252,13 @@ void c_end (const char *src_filename)
 	fclose (f);
 	remove (buf);
 	cout ("#endif /* PART2 */\n");
+#endif
 
 	snprintf (buf, sizeof (buf), ".%s.c", src_filename);
 	if ((f = fopen (buf, "r"))==NULL) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
-	cout ("#ifdef PART1\n");
 	while ((c = fgetc (f)) != EOF) fputc (c, c_out);
 	fclose (f);
 	remove (buf);
@@ -277,7 +291,6 @@ void c_end (const char *src_filename)
 	cln ("goto jumptable;\n");
 	
 	cout ("end_:\treturn;\n}\n");
-	cout ("#endif /* PART1 */\n");
 
 	fclose (c_out);
 	
