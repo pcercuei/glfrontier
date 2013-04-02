@@ -159,11 +159,6 @@ void c_begin (const char *src_filename, const char *bin_filename)
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
-	snprintf (buf, sizeof (buf), "%s.fn.c", src_filename);
-	if ((c_out2 = fopen (buf, "w"))==NULL) {
-		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
-		exit (-1);
-	}
 
 	cout ("int Init680x0 () {\n");
 	cln ("STRam = &m68kram[0];");
@@ -175,11 +170,6 @@ void c_begin (const char *src_filename, const char *bin_filename)
 	cout ("\ts32 i, jdest = 0x1c;\n");
 	cout ("\tRegs[15]._u32 = MEM_SIZE;\n\n");
 	cout ("jumptable:\n\tswitch (jdest) {\n");
-
-	SWAP_COUT;
-	cout ("#include \"host.h\"\n");
-	cout ("#include \"fixups.h\"\n");
-	SWAP_COUT;
 }
 
 void c_end (const char *src_filename)
@@ -199,7 +189,6 @@ void c_end (const char *src_filename)
 	}
 
 	fclose (c_out);
-	fclose (c_out2);
 
 	snprintf (buf, sizeof (buf), "fixups.h", src_filename);
 	if ((c_out = fopen (buf, "w"))==NULL) {
@@ -576,8 +565,25 @@ static void make_funcname (char *buf, int len)
 
 static void c_fnbegin ()
 {
+	char buf[128];
+	char short_name[7];
 	add_fixup (0, C_FUNC, pending_func_name);
 	SWAP_COUT;
+
+	strncpy(short_name, pending_func_name, sizeof(short_name) - 1);
+	short_name[sizeof(short_name) - 1] = '\0';
+
+	snprintf (buf, sizeof (buf), "gen/%s.c", short_name);
+	if ((c_out = fopen (buf, "a"))==NULL) {
+		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
+		exit (-1);
+	}
+
+	if (!ftell(c_out)) {
+		cout ("#include \"../host.h\"\n");
+		cout ("#include \"../fixups.h\"\n");
+	}
+
 	num_funcs++;
 	cout ("void %s ()\n", pending_func_name);
 	cout ("{\n");
@@ -586,6 +592,7 @@ static void c_fnbegin ()
 static void c_fnend ()
 {
 	cout ("}\n");
+	fclose(c_out);
 	SWAP_COUT;
 }
 

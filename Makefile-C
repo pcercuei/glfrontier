@@ -1,45 +1,44 @@
 THIS=Makefile-C
 VERSION=20060623
 
-OBJS := fe2.s.o fe2.s.fn.o host.o
+SRCOBJS := audio.o hostcall.o keymap.o main.o screen.o shortcut.o input.o
+OBJS := fe2.s.o host.o \
+	$(addprefix src/,$(SRCOBJS))
+TARGET := frontier
 
-MY_CFLAGS := -O0 -fomit-frame-pointer -Wall -Wno-unused -s `sdl-config --cflags`
+CFLAGS := -O3 -fomit-frame-pointer -Wall -Wno-unused -s \
+	`sdl-config --cflags` -DOGG_MUSIC
 
-export CFLAGS = $(MY_CFLAGS) -DOGG_MUSIC
-export LIBS = -lGL -lGLU -lvorbisfile -lvorbis -logg
-export FE2OBJS = $(addprefix ../,$(OBJS))
+LIBS := -lGL -lGLU -lvorbisfile -lvorbis -logg \
+	`sdl-config --libs`
 
-default:
+.PHONY: all $(TARGET) allclean clean
+
+all: $(TARGET)
+
+$(TARGET): fe2.s.c
+	$(MAKE) -f $(THIS) gen
+	$(CC) $(CFLAGS) $(LIBS) $(OBJS) gen/*.o -o $@
+
+gen: $(patsubst %.c,%.o,$(wildcard gen/*.c)) $(OBJS)
+
+as68k/as68k:
 	$(MAKE) -C as68k/
-	$(MAKE) -f $(THIS) $(OBJS)
-	$(MAKE) -C src/
 
-fe2clean:
-	rm -f fe2.s.bin $(OBJS) fe2.s.c fe2.s.fn.c fixups.h frontier
-
-fe2:
-	$(MAKE) -f $(THIS) fe2clean
-	$(MAKE) -f $(THIS) $(OBJS)
-	$(MAKE) -C src/
-
-fe2.s.c: fe2.s
+fe2.s: as68k/as68k
+	mkdir -p gen
 	as68k/as68k --output-c fe2.s
 
-fe2.s.fn.c: fe2.s.c
+fe2.s.c: fe2.s
 
 %.o: %.c
-	$(CC) $(MY_CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(MAKE) -C src/ clean
-	rm -f frontier
-	$(MAKE) -f $(THIS) fe2clean
+	rm -rf fe2.s.bin $(OBJS) gen fe2.s.c fixups.h $(TARGET)
 
-allclean:
-	$(MAKE) -f $(THIS) clean
+allclean: clean
 	$(MAKE) -C as68k/ clean
-	$(MAKE) -C dis68k/ clean
-	$(MAKE) -f $(THIS) fe2clean
 
 # To make a nice clean tarball
 dist:
