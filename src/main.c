@@ -123,8 +123,8 @@ void Main_EventHandler()
 	   if (event.jaxis.axis > 1)
 		 break;
 
-	   event.jaxis.value >>= 12;
-	   if (event.jaxis.value == 7)
+	   event.jaxis.value >>= 13;
+	   if (event.jaxis.value == 3)
 		 event.jaxis.value++;
 
 	   if (!delta_x && !delta_y)
