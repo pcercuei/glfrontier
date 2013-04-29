@@ -37,6 +37,8 @@ char szBootDiscImage[MAX_FILENAME_LENGTH] = { "" };
 char szWorkingDir[MAX_FILENAME_LENGTH] = { "" };
 char szCurrentDir[MAX_FILENAME_LENGTH] = { "" };
 
+extern enum RENDERERS use_renderer;
+
 /*-----------------------------------------------------------------------*/
 /*
   Error handler
@@ -150,6 +152,7 @@ void Main_ReadParameters(int argc, char *argv[])
                "  --fullscreen or -f    Try to use fullscreen mode.\n"
                "  --nosound             Disable sound (faster!).\n"
                "  --size w h            Start at specified window size.\n"
+			   "  --old-renderer        Start with the old renderer.\n"
               );
         exit(0);
       }
@@ -161,6 +164,8 @@ void Main_ReadParameters(int argc, char *argv[])
       {
         bDisableSound=TRUE;
       }
+	  else if (!strcmp(argv[i], "--old-renderer"))
+		use_renderer = R_OLD;
       else if ( !strcmp(argv[i],"--size") )
       {
 	screen_h = 0;
