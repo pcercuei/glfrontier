@@ -1,40 +1,32 @@
-export CFLAGS = -O2 -g -Wall -DOGG_MUSIC
-export LIBS = -lGL -lGLU -lvorbisfile -lvorbis -logg
-export FE2OBJS = ../fe2.s.o
-
 THIS=Makefile-i386
 
-default:
+SRCOBJS := audio.o hostcall.o keymap.o main.o screen.o shortcut.o input.o
+OBJS := fe2.s.o host.o \
+	$(addprefix src/,$(SRCOBJS))
+TARGET := frontier
+
+CFLAGS := -O3 -fomit-frame-pointer -Wall -Wno-unused -s \
+	`sdl-config --cflags` -DOGG_MUSIC
+
+LIBS := -lGL -lGLU -lvorbisfile -lvorbis -logg \
+	`sdl-config --libs`
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(LIBS) $(OBJS) -o $@
+
+as68k/as68k:
 	$(MAKE) -C as68k/
-	$(MAKE) -f $(THIS) fe2.s.o
-	$(MAKE) -C src/
 
-fe2clean:
-	rm -f fe2.s.bin
-	rm -f fe2.s.o
-	rm -f fe2.s.S
-	rm -f fe2.s.c
-	rm -f frontier
-
-fe2:
-	$(MAKE) -f $(THIS) fe2clean
-	$(MAKE) -f $(THIS) fe2.s.o
-	$(MAKE) -C src/
-
-fe2.s.o:
+fe2.s.S: as68k/as68k
 	as68k/as68k --output-i386 fe2.s
-	$(CC) -c fe2.s.S -o fe2.s.o
 
 clean:
-	$(MAKE) -C src/ clean
-	rm -f frontier
-	$(MAKE) -f $(THIS) fe2clean
+	rm -rf fe2.s.bin $(OBJS) fe2.s.S $(TARGET)
 
-allclean:
-	$(MAKE) -f $(THIS) clean
+allclean: clean
 	$(MAKE) -C as68k/ clean
-	$(MAKE) -C dis68k/ clean
-	$(MAKE) -f $(THIS) fe2clean
 
 # To make a nice clean tarball
 dist:
