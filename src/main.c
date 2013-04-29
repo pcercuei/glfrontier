@@ -138,6 +138,12 @@ void Main_EventHandler()
 	   if (!delta_x && !delta_y)
 		   Input_MouseRelease(SDL_BUTTON_RIGHT);
 	   break;
+	case SDL_JOYBUTTONDOWN:
+	   Keymap_JoystickUpDown(event.jbutton.button, 1);
+	   break;
+	case SDL_JOYBUTTONUP:
+	   Keymap_JoystickUpDown(event.jbutton.button, 0);
+	   break;
     case SDL_MOUSEBUTTONDOWN:
        Input_MousePress (event.button.button);
        break;

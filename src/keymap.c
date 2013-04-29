@@ -89,6 +89,16 @@ Ins   Del
 
 */
 
+/* Joystick button to ST scan code mapping table */
+/* XXX: hardcoded for my joystick.
+ * TODO: read from a config file. */
+static int JoystickButtonToSTScanCode[16] = {
+	[0] = 0x3b,
+	[2] = 0x39,
+	[4] = 0x36,
+	[5] = 0x1c,
+	[11] = 0x43,
+};
 
 /* SDL symbolic key to ST scan code mapping table */
 static const char SymbolicKeyToSTScanCode[SDLK_LAST] =
@@ -699,3 +709,14 @@ void Keymap_KeyUp(SDL_keysym *sdlkey)
   input.key_states[symkey] = FALSE;
 }
 
+void Keymap_JoystickUpDown(unsigned int button, int pressed)
+{
+	char code;
+
+	if (button > 16)
+		return;
+
+	code = JoystickButtonToSTScanCode[button];
+	if (code)
+		Input_PressSTKey(code, pressed);
+}
