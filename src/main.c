@@ -39,6 +39,8 @@ char szCurrentDir[MAX_FILENAME_LENGTH] = { "" };
 
 extern enum RENDERERS use_renderer;
 
+static int delta_x, delta_y;
+
 /*-----------------------------------------------------------------------*/
 /*
   Error handler
@@ -96,9 +98,12 @@ void Main_UnPauseEmulation(void)
   Here we process the SDL events (keyboard, mouse, ...) and map it to
   Atari IKBD events.
 */
+
 void Main_EventHandler()
 {
   SDL_Event event;
+
+  SDL_JoystickUpdate();
 
   while (SDL_PollEvent (&event))
    switch( event.type )
@@ -114,6 +119,25 @@ void Main_EventHandler()
        input.abs_x = event.motion.x;
        input.abs_y = event.motion.y;
        break;
+	case SDL_JOYAXISMOTION:
+	   if (event.jaxis.axis > 1)
+		 break;
+
+	   event.jaxis.value >>= 12;
+	   if (event.jaxis.value == 7)
+		 event.jaxis.value++;
+
+	   if (!delta_x && !delta_y)
+		   Input_MousePress(SDL_BUTTON_RIGHT);
+
+	   if (event.jaxis.axis == 0)
+		   delta_x = event.jaxis.value;
+	   else
+		   delta_y = event.jaxis.value;
+
+	   if (!delta_x && !delta_y)
+		   Input_MouseRelease(SDL_BUTTON_RIGHT);
+	   break;
     case SDL_MOUSEBUTTONDOWN:
        Input_MousePress (event.button.button);
        break;
@@ -127,6 +151,10 @@ void Main_EventHandler()
        Keymap_KeyUp(&event.key.keysym);
        break;
    }
+
+  input.motion_x += delta_x;
+  input.motion_y += delta_y;
+
   Input_Update ();
 }
 
@@ -194,7 +222,7 @@ void Main_Init(void)
 {
   /* Init SDL's video subsystem. Note: Audio and joystick subsystems
      will be initialized later (failures there are not fatal). */
-  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK) < 0)
   {
     fprintf(stderr, "Could not initialize the SDL library:\n %s\n", SDL_GetError() );
     exit(-1);
@@ -219,6 +247,7 @@ void Main_Init(void)
 */
 void Main_UnInit(void)
 {
+  Keymap_UnInit();
   Audio_UnInit();
   Screen_UnInit();
 

@@ -11,6 +11,7 @@
 #include <SDL_keyboard.h>
 
 extern void Keymap_Init(void);
+extern void Keymap_UnInit(void);
 extern char Keymap_RemapKeyToSTScanCode(SDL_keysym* pKeySym);
 extern void Keymap_LoadRemapFile(char *pszFileName);
 extern void Keymap_DebounceAllKeys(void);

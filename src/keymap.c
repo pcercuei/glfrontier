@@ -7,12 +7,13 @@
   Here we process a key press and the remapping of the scancodes.
 */
 
+#include <SDL.h>
+
 #include "main.h"
 #include "keymap.h"
 #include "input.h"
 #include "shortcut.h"
 #include "screen.h"
-
 
 /*-----------------------------------------------------------------------*/
 /*
@@ -319,15 +320,25 @@ static char DebounceExtendedKeys[] =
   0      /* term */
 };
 
+static SDL_Joystick *joystick;
 
 
 /*-----------------------------------------------------------------------*/
 /*
-  Initialization.
+  Initialization / Deinitialization.
 */
 void Keymap_Init(void)
 {
-  memset (SdlSymToSdlScan, 0, sizeof(SdlSymToSdlScan));
+	memset (SdlSymToSdlScan, 0, sizeof(SdlSymToSdlScan));
+
+	if (SDL_NumJoysticks())
+		joystick = SDL_JoystickOpen(0);
+}
+
+void Keymap_UnInit(void)
+{
+	if (joystick)
+		SDL_JoystickClose(joystick);
 }
 
 
