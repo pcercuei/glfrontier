@@ -95,6 +95,7 @@ Ins   Del
 static int JoystickButtonToSTScanCode[16] = {
 	[0] = 0x3b,
 	[2] = 0x39,
+	[3] = 0x41,
 	[4] = 0x36,
 	[5] = 0x1c,
 	[11] = 0x43,
