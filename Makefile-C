@@ -25,14 +25,9 @@ gen: $(patsubst %.c,%.o,$(wildcard gen/*.c)) $(OBJS)
 as68k/as68k:
 	$(MAKE) -C as68k/
 
-fe2.s: as68k/as68k
+fe2.s.c: as68k/as68k
 	mkdir -p gen
 	as68k/as68k --output-c fe2.s
-
-fe2.s.c: fe2.s
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf fe2.s.bin $(OBJS) gen fe2.s.c fixups.h $(TARGET)
