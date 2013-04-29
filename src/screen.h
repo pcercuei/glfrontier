@@ -13,8 +13,6 @@
 extern unsigned long VideoBase;
 extern unsigned char *VideoRaster;
 
-extern unsigned int MainRGBPalette[256];
-extern unsigned int CtrlRGBPalette[16];
 extern int fe2_bgcol;
 
 extern SDL_Surface *sdlscrn;
@@ -22,8 +20,10 @@ extern BOOL bGrabMouse;
 extern BOOL bInFullScreen;
 enum RENDERERS {
 	R_OLD,
+#ifdef WITH_GL
 	R_GLWIRE,
 	R_GL,
+#endif
 	R_MAX
 };
 extern enum RENDERERS use_renderer;

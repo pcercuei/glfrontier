@@ -866,6 +866,8 @@ static void Call_Freaddir ()
 	SetReg (REG_D0, 0);
 }
 
+static void not_available() {}
+
 HOSTCALL hcalls [] = {
 	&SetExceptionHandler,
 	&Call_Memset,		/* 0x1 */
@@ -967,6 +969,7 @@ HOSTCALL hcalls [] = {
 	NULL,
 	NULL,
 	NULL,
+#ifdef WITH_GL
 	Nu_PutTriangle,			/* 0x60 */
 	Nu_PutQuad,
 	Nu_PutLine,
@@ -993,4 +996,32 @@ HOSTCALL hcalls [] = {
 	Nu_PutBlob,
 	Nu_PutPlanet,
 	Nu_Put2DLine
+#else
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  Nu_DrawScreen,
+	  not_available,
+	  not_available,
+	  not_available,
+	  Nu_IsGLRenderer,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+	  not_available,
+#endif
 };

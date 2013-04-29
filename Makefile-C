@@ -1,16 +1,26 @@
 THIS=Makefile-C
 VERSION=20060623
 
-SRCOBJS := audio.o hostcall.o keymap.o main.o screen.o shortcut.o input.o
-OBJS := fe2.s.o host.o \
-	$(addprefix src/,$(SRCOBJS))
-TARGET := frontier
+SRCOBJS := audio.o hostcall.o keymap.o main.o shortcut.o input.o
 
 CFLAGS := -O3 -fomit-frame-pointer -Wall -Wno-unused -s \
 	`sdl-config --cflags` -DOGG_MUSIC
 
-LIBS := -lGL -lGLU -lvorbisfile -lvorbis -logg \
+LIBS := -lvorbisfile -lvorbis -logg \
 	`sdl-config --libs`
+
+WITH_GL=y
+ifeq ($(WITH_GL),y)
+	SRCOBJS += gl.o
+	LIBS += -lGL -lGLU
+	CFLAGS += -DWITH_GL
+else
+	SRCOBJS += soft.o
+endif
+
+OBJS := fe2.s.o host.o \
+	$(addprefix src/,$(SRCOBJS))
+TARGET := frontier
 
 .PHONY: all $(TARGET) allclean clean
 
