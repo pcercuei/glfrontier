@@ -1,0 +1,39 @@
+TODO
+~~~~~
+
+GL renderer
+~~~~~~~~~~~
+
+(!) Z ordering issues (intro on planet, ship undercarriage, ...)
+
+(!) planet renderer
+
+(!) Holes in some types of space station (hoop one). investigate.
+
+(!) Remaining tesselation bugs on hills, clouds, etc.
+
+(+) Teardrop drawn poorly.
+
+(+) TwinklyCircle drawn poorly.
+
+gl renderer performance
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+1 remaining murderer of framerate:
+
+* gluTesselator for 0x5 objects
+
+
+Bugs
+~~~~
+
+stockmarket and bulletin board getting fucked up sometimes (x86 compile bug?)
+
+old bug - repairing your hull involves RSI mouse clicking
+
+why is the savefile extension option the wrong way around?
+
+Inability to enter starsystem view (use keyboard) - more generally
+that fucking broken click bug of fe2.
+
+

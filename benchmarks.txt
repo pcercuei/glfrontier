@@ -1,0 +1,21 @@
+A sortof benchmark is reported fps at the start point on mars,
+once the framerate has settled down (clouds are slowly added).
+
+Press 'f' to enable framerate display.
+Press 'ctrl-e' to switch between gl and software renderers.
+
+Test system: athlon xp1700+, ddr333, lunix, nvidia fx5700 (driver 81.78).
+C output cores compiled with gcc-2.95, -O1 part1, -O0 part2.
+
+./frontier --nosound
+
+Build		i386old	i386-gl	C-old	C-gl	notes
+		
+2006-02-22	87	33	22	18	gl display list abuse fixed!
+2006-02-21_2	85 	16	22	11
+
+frontvm2:
+2006-01-16	94		16
+
+frontvm1 (8 fps - uae 68k interpreted core)
+

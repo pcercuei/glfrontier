@@ -1,0 +1,10 @@
+audio.o: audio.c main.h audio.h ../m68000.h
+hostcall.o: hostcall.c main.h ../m68000.h hostcall.h screen.h audio.h \
+  input.h keymap.h shortcut.h
+keymap.o: keymap.c main.h keymap.h input.h shortcut.h screen.h
+main.o: main.c main.h audio.h ../m68000.h hostcall.h input.h keymap.h \
+  screen.h shortcut.h
+screen.o: screen.c main.h ../m68000.h screen.h
+shortcut.o: shortcut.c main.h audio.h screen.h shortcut.h hostcall.h \
+  ../m68000.h
+input.o: input.c main.h input.h ../m68000.h shortcut.h screen.h

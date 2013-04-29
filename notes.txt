@@ -1,0 +1,540 @@
+
+outstanding introduced/emulation bugs:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+search for 'XXX' in fe2.s to find comments on known breakage.
+
+462(a5) arg d1:
+
+0x0	last thingy? always player's ship?
+0x2	*hmm...*
+0x4	*crash!*
+0x6	prox mine
+0x8	prox mine
+0xa	missile
+0xc	smart missile
+0xe	naval missile
+0x10	nuclear missile
+0x12	escape capsule
+0x14	interplanetary shuttle
+0x16	lifter
+0x18	osprey
+0x1a	falcon attack fighter
+0x1c	hawk airfighter
+0x1e	kestrel 
+0x20	eagle
+0x22	eagle II
+0x24	eagle III
+0x26	sidewinder
+0x28	krait
+0x2a	gecko
+0x2c	adder
+0x2e	viper
+0x30	cobra 1
+0x32	moray starboat
+0x34	cobra 3
+0x36	constrictor
+0x38	asp
+0x3a	transporter
+0x3c	lion
+0x3e	tiger
+0x40	imperial courier
+0x42	python
+0x44	imperial trader
+0x46	anaconda
+0x48	puma
+0x4a	boa
+0x4c	panther clipper
+0x4e	big thargoid ship...
+0x50	lynx bulk carrier
+0x52	long range cruiser
+0x54	lave type small space station
+0x56	hoop type space station
+0x58	orbital city
+0x5a	4-berth starport with hills and a river and crap
+0x5c	more landscape poo. starport?
+0x5e	6-berth starport with scenery.
+0x60	another 6-berth starport + scenery
+0x62	2-berth starport (merlin) + big greenhouses and junk
+0x64	6-berth starport on a big lump of green. how odd. intro?
+0x66	no atmosphere type starport. 2 flashy light towers. dirty industry, etc
+0x68	" ". 4 towers.
+0x6a	" ". smaller.
+0x6c	" ". lots of industry and greenhouses on this one.
+0x6e	5 tower thing. industry. not a starport apparently.
+0x70	" ". +big fuckoff radar dish
+0x72	" ". +greenhouses
+0x74	" ". +2 thargoid things.
+0x76	Hm. you die. this must be something really big.
+0x78	mb-4 mining machine
+0x7a	see 0x76
+0x7c	an asteroid
+0x7e,0x80,0x82,0x84	see 0x76
+... do more ...
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+for calling FmtStr:
+	d0 = format type described below
+	d4 = colour
+	d5 = x
+	d6 = y
+	d7 = 0 ??
+
+d0:
+      < 0x3000  string 'd0' in stringtable L3e878, which contains
+      		only "hello there" and "how are you" :-)
+	0x3015	"%08x" hex (in d3)
+	0x3014	"%08x" hex (in d2)
+	0x3013	"%08x" hex (in d1)
+	0x3012	HH:MM:SS (in d3)
+	0x3011	HH:MM:SS (in d2)
+	0x3010	HH:MM:SS (in d1)
+	0x300f	dd-mon-year (day of year in d3)
+	0x300e	dd-mon-year (in d2)
+	0x300d	dd-mon-year (in d1)
+	0x300c	int32 3 dec places (in d3)
+	0x300b	int32 3 dec places (in d2)
+	0x300a	int32 3 dec places (in d1)
+	0x3009	int32 2 dec places (in d3)
+	0x3008	int32 2 dec places (in d2)
+	0x3007	int32 2 dec places (in d1)
+	0x3006	int32 1 dec place (in d3)
+	0x3005	int32 1 dec place (in d2)
+	0x3004	int32 1 dec place (in d1)
+	0x3003	int32 (in d3)
+	0x3002	int32 (in d2)
+	0x3001	int32 (in d1)
+	0x3000  erm, like, do last thing printed.
+	
+	0x4xxx  use string xxx from stringtable A6_game_strings(a6)
+	0x80xx - 0xa2xx
+		use string xxx from stringtable in module given by:
+		12 + a6 + (((d0*2) & 0xffff)>>7)
+		(The module string table is then obtained by jumping
+		to 40(addr), the address calculated above.
+		( mod0 = 0x80xx, mod1 = 0x82xx, ... )
+	
+		hm. that there copy thingy is 0x98d8
+		
+
+SFX indices:
+~~~~~~~~~~~~~
+
+	0	ui_beep
+	1	laser0
+	2	laser1
+	3	laser2
+	4	launch_granted
+	5	station_door_open
+	6	explode1
+	7	??
+	8	explode2
+	9	explode3
+	10	explode4
+	11	explode5
+	12	explode6
+	13	explode7
+	14	explode8
+	15	explode9
+	16	explode10
+	17	laser_burn
+	18	??
+	19	hyperspace (loop)
+	20	hyperspace_end
+	21	send_message
+	22	fire_missile
+	23	noise (loop)
+	24	ECM
+	25	warning!
+	26	retract wheels (?)
+	27	<silence?>
+	28	select object
+	29	bing
+	30	big bing!
+	31	launch_noise
+	32	dildo
+
+modfuncs:
+~~~~~~~~~
+4(a4) - init
+20(a4) - every turn in 3d view
+40(a4) - get string-table
+
+
+MOSTLY 3D RENDERER
+~~~~~~~~~~~~~~~~~~
+notation example: normal{4} means 4 byte long type nicknamed 'normal'
+
+220 byte stackframe in A6 setup by PutGameData3DObj, Put...3DObj, etc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LONG	-220(a6)	pointer to normals{4} in 3d model
+LONG	-216(a6)	pointer to vertices{4} in 3d model
+LONG	-212(a6)	a6 as passed to PutGameData3DObj... (higher stackframe..)
+WORD	-208(a6)	obj scale - from 10(objmodel)
+WORD*3	-198(a6)	lightsource vector
+WORD	-192(a6)		<cleared on init>
+WORD	-156(a6)		<cleared on init>
+LONG*4	-104(a6)	lightsource tint palette
+WORD	 -64(a6)		<cleared on init>
+WORD*16	 -36(a6)	obj rot matrix (3x3)
+LONG	  -4(a6)	pointer to obj model
+
+
+
+the 3d model the renderer has pointer to in a5:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+size	offset
+WORD	0		offset to bytecode (added to a5 for ProjectObj3D)
+WORD	2		offset to vertices
+WORD	4		num vertices * 64 - size of a4 vertex struct made in SetupNProjectObj
+WORD	6		offset to normals
+WORD	8		4*num normals + 4
+WORD	10		scale
+WORD	12		???
+WORD	14		another scale thingy?
+
+Entering projection functions, type read with (a5)+, Passed to project funcs in d6.w.
+
+Then different projector functions read their vertex,color,other crap from (a5)+,
+and on return to Project3DObj the next word will be another projection func index.
+Eg: for ProjectQuad_1:
+	Bytes 0,1,2,3 of (a5) are the 4 vertex ids.
+	WORD 4 is colour index of some kind.
+for ProjectTriangle_1:
+	Bytes 0,1,2 are 3 vertex ids.
+	Byte 4 is colour index.
+
+
+for shoving objects into the renderer:
+
+Caller (ejemplo DrawBGStars):
+	# Creates 286 byte stackframe with
+	lea	-286(a7),a7
+	move.l	a7,a6
+
+	{ bg stars
+		20(a6) = 0.l
+		24(a6) = 0.l
+		28(a6) = $200.l
+		90(a6) = $b0.w
+	}
+	{ hyperspace cloud (during hyperspace)
+		20(a6) = 0.l
+		24(a6) = 0.l
+		28(a6) = some value (bigger = more distant :)
+		90(a6) = $ba.w
+		116(a6) = 0.w
+		122(a6) = $ffff.w
+	}
+		
+	
+	call Put3DObj:
+		d0 = 90(a6).w
+		a5 = Address of gamedata obj num 'd0.w'.
+
+		a4 = a6
+
+		# make 220 byte stackframe
+		link	a6,#-220
+
+		# this is the object rotate matrix.
+		copy 32 bytes: -36(a6) = 0(a4) [caller stackframe]
+
+		# so (in viewing coords)
+		-16(a6) = x
+		-12(a6) = y
+		-8(a6) = z
+
+		# game data shit
+		-208(a6) = WORD 10(a5)
+
+		-212(a6) = LONG a4 [caller stackframe]
+		-156(a6) = 0.w
+		-192(a6) = 0.w
+
+		# flags Z if obj is onscreen
+		call 3DObjClipOffscreen
+		if not Z: return
+
+		-64(a6) = 0.w
+		* this is an extra color tint value, but is only applied
+		* if object color (rgb444) bits 4 and 8 are zero.
+		-154(a6) = $111.w
+		# lighting vector:
+		copy 3 LONGs: -198(a6) = L60e2    (which is normally 556(a6))
+		copy 4 LONGs: -104(a6) = L60f6    (which is normally 576(a6))
+		
+		call CalcZnLighting
+			
+		
+
+	# Destroy stackframe
+	lea	286(a7),a7
+
+
+# THIS HERE is a truth table of how object colours are tinted.
+# obj_col.w is the rgb444 value in the object model, usually in d6
+* when 3DPrimCullNLight is called
+* light_col.w is the value returned by 3DPrimCullNLight in (a0)
+* extra_col is value passed to Put3DObj, in -154(a6).w
+
+				obj_col bit:	4	8
+col:
+light_col + obj_col				0	0
+obj_col						0	1
+light_col + obj_col + extra_col			1	0
+obj_col + extra_col				1	1
+						
+
+call CalcZnLighting:
+	d0-2 = z,y,z
+	d3 = 0
+	d5 = $4000
+	d4 = abs (z)
+	# find a shift value (d3) to keep abs (x,y,z) coords < $4000
+	while (d4 >= $4000) {
+		d3 += 1
+		d4 >>= 1
+	}
+	
+	d4 = abs (x)
+	d4 >>= d3
+	while (d4 >= $4000) {
+		d3 += 1
+		d4 >>= 1
+	}
+
+	d4 = abs (y)
+	d4 >>= d3
+	while (d4 >= $4000) {
+		d3 += 1
+		d4 >>= 1
+	}
+
+	# all LONG
+	x >>= d3
+	y >>= d3
+	z >>= d3
+
+	# save shift val
+	-44(a6) = WORD d3
+	d3 += 7
+	d4 -= WORD -208(a6)
+
+	if (d3 < 0) {
+		d3 = abs (d3)
+		-44(a6) += WORD d3
+		WORD x >>= d3
+		WORD y >>= d3
+		WORD z >>= d3
+	}
+	x = -x
+	y = -y
+	z = -z
+
+	# WORD 3x3 matrix M[9] at -36(a6)
+	x1 = HIGH WORD 2*(x*M[0] + y*M[1] + z*M[2])
+	y1 = HIGH WORD 2*(x*M[3] + y*M[4] + z*M[5])
+	z1 = HIGH WORD 2*(x*M[6] + y*M[7] + z*M[8])
+	-50(a6) = WORD x1,y1,z1
+
+	# Lighting vector
+	x,y,z = -198(a6)
+	x2 = HIGH WORD 2*(x*M[0] + y*M[1] + z*M[2])
+	y2 = HIGH WORD 2*(x*M[3] + y*M[4] + z*M[5])
+	z2 = HIGH WORD 2*(x*M[6] + y*M[7] + z*M[8])
+	-42(a6) = WORD x2,y2,z2
+	return
+	
+
+# flags Z if obj is onscreen
+call 3DObjClipOffscreen:
+	# a5 still game data shit
+	x,y,z = viewing coords
+	d3 = LONG (WORD 14(a5) << WORD -208(a6))
+	z += d3
+	# object behind viewer
+	if z < 0: return
+	x = abs x
+	y = abs y
+	x -= d3
+	if x >= 0 goto l3966e
+	x = 0
+	l3966e:
+	if x > z: return
+	y -= d3
+	if y >= 0: goto l39678
+	y = 0
+	l39678:
+	y *= 2
+	if y > z: return
+	x = 0
+	return
+		
+L3e14e:
+	-216(a6) = LONG (gamedata + 2(gamedata).w)
+	#alloc stackframe: 
+	a7 -= WORD 4(gamedata)
+	a4 = a7
+	# and then some more
+	a7 -= WORD 8(gamedata)
+	a7 -= $c0
+	# save gamedata obj pointer
+	-4(a6) = LONG a5
+	-220(a6) = LONG gamedata + 6(gamedata).w
+	
+	# -208(a6) is 10(a5)
+	d4 = WORD -208(a6)
+	d4 -= WORD 8
+	# that shift val
+	d4 -= -44(a6)
+	
+	if (d4 > 0) {
+		shift each value in vector3 -50(a6) >> d4.
+	}
+	# we are the only caller of this func
+	call L39690:
+		# a4 is the stackframe allocated previously
+		# a4 has 4(gamedata).w bytes below it and
+		# 8(gamedata).w + $c0 bytes above.
+		a0 = a4 + 18
+		-160(a0) = 0.w
+		-128(a0) = 0.w
+		-96(a0) = 0.w
+		-64(a0) = 0.w
+		-32(a0) = 0.w
+		# and then it is wiped according to the length in d0,
+		# every 32 fuckheads
+		return
+	# also only caller of this one
+	call L3a00c:
+		a0 = 4(a7)
+		d1 = 8(gamedata).w   # which is frame size above a4...
+		# wtf is -98(a6)...
+		(a0)+ = LONG -98(a6)
+		d1 >>= 1
+		d1 -= 3
+		if (d1 < 0) return
+		do {
+			(a0)+ = #$8080.w
+		} while (--d1 != -1)
+		return
+	# OK. so this a4 stackframe now looks like:
+	# from 4(a7) to -160(a4) (len 8(gamedata).w) filled with $8080
+	# -160(a4) to (4(gamedata).w + a4), every 32-bytes = 0.w
+	#
+	# The bit below a4 with 32-byte chunks is for storing model vertices
+	# transformed to viewing coords. It goes like this:
+	# WORD*2	0	projected 2D x,y coords
+	# LONG*3	4	20 + viewing transform
+	# WORD		18	zero if this vertex has not been setup yet
+	# LONG*3	20	model coords transformed by model rotation
+	#
+	-152(a6) = $2.b
+	a5 += WORD 0(a5)
+	
+	# phew..
+	call Project3DObj....
+	
+	lea	-224(a6),a7
+	return
+
+3DPrimCullNLight:
+	ARG d0 = WORD (BYTE color id thingy)*2
+	a1 = LONG -220(a6) # gamedata + 6(gamedata).w
+	
+	bclr	#1,d0
+	if (bit 1 was set) {
+		# XXX finish...
+	}
+	d1,d3 = WORD -4(a1,d0.w)
+	d0 = d1
+	d1 <<= 8
+	d2 = d3
+	d2 &= 0xff00
+	d3 <<= 8
+	d0 >>= 7
+	d0 &= 0xfffe
+
+For ProjectCoords:
+	Input:
+		model coords	3xl	20(a0)
+		world coords	3xl	-16(a6)
+	Output:
+		model+world	3xl	4(a0)
+		z-component ^^	l	12(a0)
+		2d projection	2xw	0(a0)
+
+Draw3DView:
+	pos = primitives_base
+
+	for (;;) {
+		FUCK:
+		push pos;
+		
+		if (pos[8].l) {
+			pos = pos[8].l
+			continue;
+		}
+		break;
+	}
+
+	call L386ce + pos[12].w
+
+	for (;;) {
+		pop pos
+		
+		if (pos[4].l) {
+			pos = pos[4].l
+			goto FUCK
+		}
+		peek pos
+
+		call L386ce + pos[12].w
+	}
+
+###################
+2d primitive numbers:
+
+0x5a - bezier section of complex polygon
+
+ProjectPlanet:
+~~~~~~~~~~~~~~
+
+Allocates 214 bytes on stack in a3.
+
+32(a3).w = (d6 {as passed to function} >> 4) & 0xfffe 
+194(a3).l = a5 {as passed} + 4
+# planet feature detail
+172(a3).w = 16 + optdetail2
+# load some crap into a0:
+lea 0(a4,d0.w),a0 where d0 = (a5)+ byte extended to word << 5
+120(a3).w*3 = x,y,z of planet (fucked around with in some way. these notes are crap)
+36(a3) = 8 words containing some unknown shit.
+56(a3) = 2 words of shite
+80(a3) = 4 longs of shite
+60(a3) = 2 words of shite
+206(a3).w = $10
+96(a3).w = $5
+48(a3) = 2 words
+64(a3) = 2 words
+52(a3) = 2 words
+76(a3) = 2 words
+
+# the ship object that is read (a5)
+(d6.w >> 4) & 0xfffe -> 32(a3)
+(a5)+.l
+(a5)+.w * 4
+(a5)+.w
+lea 56(a5),a5
+(a5)+.w * 4
+
+if (a5)+.w == 0: goto poop1
+
+poop2: oh fuck this is horrible
+
+poop1:
+
+

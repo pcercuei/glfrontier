@@ -1,0 +1,53 @@
+export CC = gcc
+
+# if you desire music
+export CFLAGS = -O2 -g -Wall -DOGG_MUSIC
+export LIBS = -lglu32 -lopengl32 /mingw/lib/libvorbisfile.a /mingw/lib/libvorbis.a /mingw/lib/libogg.a
+
+# or not
+#export CFLAGS = -O2 -g -Wall 
+#export LIBS = -lglu32 -lopengl32
+
+export FE2OBJS = ../fe2.s.o
+
+THIS=Makefile-mingw
+
+default:
+	$(MAKE) -C as68k/
+	$(MAKE) -f $(THIS) fe2.s.o
+	$(MAKE) -C src/
+
+fe2clean:
+	rm -f fe2.s.bin
+	rm -f fe2.s.o
+	rm -f fe2.s.S
+	rm -f fe2.s.c
+	rm -f frontier.exe
+
+fe2:
+	$(MAKE) -f $(THIS) fe2clean
+	$(MAKE) -f $(THIS) fe2.s.o
+	$(MAKE) -C src/
+
+fe2.s.o:
+	as68k/as68k --output-i386 fe2.s
+	$(CC) -c fe2.s.S -o fe2.s.o
+
+clean:
+	$(MAKE) -C src/ clean
+	rm -f frontier.exe
+	$(MAKE) -f $(THIS) fe2clean
+
+allclean:
+	$(MAKE) -f $(THIS) clean
+	$(MAKE) -C as68k/ clean
+	$(MAKE) -C dis68k/ clean
+	$(MAKE) -f $(THIS) fe2clean
+
+# To make a nice clean tarball
+dist:
+	$(MAKE) -f Makefile-C dist
+
+audio-dist:
+	$(MAKE) -f Makefile-C audio-dist
+
