@@ -103,8 +103,8 @@ static int JoystickButtonToSTScanCode[16] = {
 	[11] = 0x43,
 	[12] = 0x48,
 	[13] = 0x50,
-	[14] = 0x4d,
-	[15] = 0x4b,
+	[14] = 0x4b,
+	[15] = 0x4d,
 };
 
 /* SDL symbolic key to ST scan code mapping table */
