@@ -98,6 +98,8 @@ static int JoystickButtonToSTScanCode[16] = {
 	[3] = 0x41,
 	[4] = 0x36,
 	[5] = 0x1c,
+	[6] = 0x10,
+	[7] = 0x11,
 	[11] = 0x43,
 };
 
@@ -710,14 +712,51 @@ void Keymap_KeyUp(SDL_keysym *sdlkey)
   input.key_states[symkey] = FALSE;
 }
 
+static void inject_mouse_event(unsigned int x, unsigned int y, int pressed)
+{
+	static unsigned int old_x, old_y;
+
+	if (pressed) {
+		old_x = input.abs_x;
+		input.abs_x = x;
+		old_y = input.abs_y;
+		input.abs_y = y;
+		Input_MousePress(SDL_BUTTON_LEFT);
+	} else {
+		Input_MouseRelease(SDL_BUTTON_LEFT);
+		input.abs_x = old_x;
+		input.abs_y = old_y;
+	}
+}
+
 void Keymap_JoystickUpDown(unsigned int button, int pressed)
 {
+	static int currentTimeMode = 1;
+	static unsigned int button_already_pressed;
 	char code;
 
 	if (button > 16)
 		return;
 
 	code = JoystickButtonToSTScanCode[button];
-	if (code)
+	if (!code)
+		return;
+
+	if (code == 0x10 || code == 0x11) {
+		if (pressed) {
+			if (button_already_pressed)
+				return;
+			button_already_pressed = button;
+		} else if (button != button_already_pressed)
+			return;
+		else
+			button_already_pressed = 0;
+
+		if (pressed && code == 0x11 && currentTimeMode < 5)
+			currentTimeMode++;
+		if (pressed && code == 0x10 && currentTimeMode)
+			currentTimeMode--;
+		inject_mouse_event(10 + 20 * currentTimeMode, 440, pressed);
+	} else
 		Input_PressSTKey(code, pressed);
 }
