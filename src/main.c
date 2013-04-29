@@ -144,6 +144,21 @@ void Main_EventHandler()
 	case SDL_JOYBUTTONUP:
 	   Keymap_JoystickUpDown(event.jbutton.button, 0);
 	   break;
+	case SDL_JOYHATMOTION:
+	   if (event.jhat.value == SDL_HAT_UP)
+		   Keymap_JoystickUpDown(12, 1);
+	   else if (event.jhat.value == SDL_HAT_DOWN)
+		   Keymap_JoystickUpDown(13, 1);
+	   else if (event.jhat.value == SDL_HAT_LEFT)
+		   Keymap_JoystickUpDown(14, 1);
+	   else if (event.jhat.value == SDL_HAT_RIGHT)
+		   Keymap_JoystickUpDown(15, 1);
+	   else {
+		   int i;
+		   for (i = 12; i < 16; i++)
+			   Keymap_JoystickUpDown(i, 0);
+	   }
+	   break;
     case SDL_MOUSEBUTTONDOWN:
        Input_MousePress (event.button.button);
        break;
