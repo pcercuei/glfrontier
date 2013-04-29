@@ -6,8 +6,6 @@
 */
 
 #include <SDL.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
 
 #include "main.h"
 #include "../m68000.h"
