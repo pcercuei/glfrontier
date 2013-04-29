@@ -1,3 +1,11 @@
+IMPORTANT INFORMATION:
+~~~~~~~~~~~~~~~~~~~~~~
+For the compilation to success, an external file is needed, named 'fe2.s'.
+That file shall correspond to the disassembly of the original binary.
+
+This repository does not provide this file as it would contain copyrighted
+data, and as such is not freely redistribuable.
+
 
 FrontierVM 3 :D
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
