@@ -760,7 +760,7 @@ void Keymap_JoystickUpDown(unsigned int button, int pressed)
 			currentTimeMode++;
 		if (pressed && code == 0x10 && currentTimeMode)
 			currentTimeMode--;
-		inject_mouse_event(10 + 20 * currentTimeMode, 440, pressed);
+		inject_mouse_event(5 + (screen_w >> 5) * currentTimeMode, screen_h * 9 / 10, pressed);
 	} else
 		Input_PressSTKey(code, pressed);
 }
