@@ -3,6 +3,8 @@ VERSION=20060623
 
 SRCOBJS := audio.o hostcall.o keymap.o main.o shortcut.o input.o
 
+COMPILER ?= gcc
+CC := $(CROSS_COMPILE)$(COMPILER)
 CFLAGS := -O3 -fomit-frame-pointer -Wall -Wno-unused -s \
 	`sdl-config --cflags` -DOGG_MUSIC
 
