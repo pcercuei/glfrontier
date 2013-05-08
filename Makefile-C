@@ -1,7 +1,7 @@
 THIS=Makefile-C
 VERSION=20060623
 
-SRCOBJS := audio.o hostcall.o keymap.o main.o shortcut.o input.o
+SRCOBJS := audio.o hostcall.o keymap.o main.o shortcut.o input.o joystick.o
 
 COMPILER ?= gcc
 CC := $(CROSS_COMPILE)$(COMPILER)
