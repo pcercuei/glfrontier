@@ -20,6 +20,7 @@
 #include "../m68000.h"
 #include "hostcall.h"
 #include "input.h"
+#include "joystick.h"
 #include "keymap.h"
 #include "screen.h"
 #include "shortcut.h"
@@ -39,7 +40,7 @@ char szCurrentDir[MAX_FILENAME_LENGTH] = { "" };
 
 extern enum RENDERERS use_renderer;
 
-static int delta_x, delta_y;
+int delta_x, delta_y;
 
 /*-----------------------------------------------------------------------*/
 /*
@@ -120,23 +121,8 @@ void Main_EventHandler()
        input.abs_y = event.motion.y;
        break;
 	case SDL_JOYAXISMOTION:
-	   if (event.jaxis.axis > 1)
-		 break;
-
-	   event.jaxis.value >>= 13;
-	   if (event.jaxis.value == 3)
-		 event.jaxis.value++;
-
-	   if (!delta_x && !delta_y)
-		   Input_MousePress(SDL_BUTTON_RIGHT);
-
-	   if (event.jaxis.axis == 0)
-		   delta_x = event.jaxis.value;
-	   else
-		   delta_y = event.jaxis.value;
-
-	   if (!delta_x && !delta_y)
-		   Input_MouseRelease(SDL_BUTTON_RIGHT);
+	   if (event.jaxis.axis <= 1)
+		   joystick_mouse_motion(event.jaxis.axis, event.jaxis.value);
 	   break;
 	case SDL_JOYBUTTONDOWN:
 	   Keymap_JoystickUpDown(event.jbutton.button, 1);

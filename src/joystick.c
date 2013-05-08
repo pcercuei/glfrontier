@@ -110,3 +110,23 @@ void Keymap_JoystickUpDown(unsigned int button, int pressed)
 	} else
 		Input_PressSTKey(code, pressed);
 }
+
+void joystick_mouse_motion(unsigned int axis, int value)
+{
+	extern int delta_x, delta_y;
+
+	value >>= 13;
+	if (value == 3)
+		value++;
+
+	if (!delta_x && !delta_y)
+		Input_MousePress(SDL_BUTTON_RIGHT);
+
+	if (axis == 0)
+		delta_x = value;
+	else
+		delta_y = value;
+
+	if (!delta_x && !delta_y)
+		Input_MouseRelease(SDL_BUTTON_RIGHT);
+}
