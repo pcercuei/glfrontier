@@ -1,9 +1,12 @@
+#include <ini.h>
 #include <SDL.h>
 
 #include "main.h"
 #include "input.h"
 #include "joystick.h"
 #include "screen.h"
+
+#define JS_NB_BUTTONS_MAX	16
 
 /* Key mapping of the game */
 #define MOVE_UP		0x2c
@@ -18,7 +21,7 @@
 #define LOOK_UP		0x48
 #define LOOK_DOWN	0x50
 #define LOOK_LEFT	0x4b
-#define LOOK_RIGHT	0x4c
+#define LOOK_RIGHT	0x4d
 #define PAUSE		0x01
 #define MB4_PHOTO	0x20
 #define HYPERSPACE	0x23
@@ -43,24 +46,104 @@
 #define SPECIAL_TIME_DECREASE	0x10
 #define SPECIAL_TIME_INCREASE	0x11
 
+#define ARRAY_SIZE(s) \
+  (sizeof(s) ? sizeof(s) / sizeof(s[0]) : 0)
+
+#define ACTION(_action) \
+	{ .action = #_action, .code = _action }
+
+static struct {
+	const char *action;
+	unsigned char code;
+} action_to_code[] = {
+	/* TODO: "MOVE_LEFT", "MOVE_RIGHT", "ANALYSER" */
+	ACTION(MOVE_UP),
+	ACTION(MOVE_DOWN),
+	ACTION(RTHRUST),
+	ACTION(THRUST),
+	ACTION(RADAR),
+	ACTION(ZOOM_IN),
+	ACTION(ZOOM_OUT),
+	ACTION(LOOK_DOWN),
+	ACTION(LOOK_UP),
+	ACTION(LOOK_LEFT),
+	ACTION(LOOK_RIGHT),
+	ACTION(PAUSE),
+	ACTION(MB4_PHOTO),
+	ACTION(HYPERSPACE),
+	ACTION(LASER),
+	ACTION(ECM),
+	ACTION(EJECT),
+	ACTION(BOMB),
+	ACTION(MISSILE),
+	ACTION(MAP_CENTER),
+	ACTION(F1),
+	ACTION(F2),
+	ACTION(F3),
+	ACTION(F4),
+	ACTION(F5),
+	ACTION(F6),
+	ACTION(F7),
+	ACTION(F8),
+	ACTION(F9),
+	ACTION(F10),
+	ACTION(ALT),
+
+	ACTION(SPECIAL_TIME_DECREASE),
+	ACTION(SPECIAL_TIME_INCREASE),
+};
 
 /* Joystick button to ST scan code mapping table */
-/* XXX: hardcoded for my joystick.
- * TODO: read from a config file. */
-static int JoystickButtonToSTScanCode[16] = {
-	[0] = F1,
-	[2] = LASER,
-	[3] = F7,
-	[4] = RTHRUST,
-	[5] = THRUST,
-	[6] = SPECIAL_TIME_DECREASE,
-	[7] = SPECIAL_TIME_INCREASE,
-	[11] = F9,
-	[12] = LOOK_UP,
-	[13] = LOOK_DOWN,
-	[14] = LOOK_LEFT,
-	[15] = LOOK_RIGHT,
-};
+static int JoystickButtonToSTScanCode[JS_NB_BUTTONS_MAX];
+
+
+static void read_key_config(struct INI *ini)
+{
+	for (;;) {
+		const char *key, *val;
+		size_t lkey, lval;
+		unsigned int i;
+		unsigned char code = 0, button;
+		int ret = ini_read_pair(ini, &key, &lkey, &val, &lval);
+		if (ret <= 0)
+			break;
+
+		for (i = 0; i < ARRAY_SIZE(action_to_code); i++)
+			if (!strncmp(action_to_code[i].action, key, lkey)) {
+				code = action_to_code[i].code;
+				break;
+			}
+
+		if (!code) {
+			fprintf(stderr, "Skipping unknown key: %.*s\n", (int) lkey, key);
+			continue;
+		}
+
+		button = atoi(val);
+		JoystickButtonToSTScanCode[button] = code;
+	}
+}
+
+void joystick_read_config(const char *path)
+{
+	struct INI *ini = ini_open(path);
+	if (!ini)
+		return;
+
+	for (;;) {
+		const char *name;
+		size_t len;
+		if (ini_next_section(ini, &name, &len) <= 0)
+			break;
+
+		if (!strncmp(name, "Key Config", len))
+			read_key_config(ini);
+		else
+			fprintf(stderr, "WARNING: Skip unsupported section in config file");
+	}
+
+	ini_close(ini);
+}
 
 static void inject_mouse_event(unsigned int x, unsigned int y, int pressed)
 {

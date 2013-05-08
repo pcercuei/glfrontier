@@ -8,7 +8,7 @@ CC := $(CROSS_COMPILE)$(COMPILER)
 CFLAGS := -O3 -fomit-frame-pointer -Wall -Wno-unused -s \
 	`sdl-config --cflags` -DOGG_MUSIC
 
-LIBS := -lvorbisfile -lvorbis -logg \
+LIBS := -lvorbisfile -lvorbis -logg -lini \
 	`sdl-config --libs`
 
 WITH_GL=y

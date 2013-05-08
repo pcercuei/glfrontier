@@ -331,8 +331,10 @@ void Keymap_Init(void)
 {
 	memset (SdlSymToSdlScan, 0, sizeof(SdlSymToSdlScan));
 
-	if (SDL_NumJoysticks())
+	if (SDL_NumJoysticks()) {
 		joystick = SDL_JoystickOpen(0);
+		joystick_read_config("joystick.ini");
+	}
 }
 
 void Keymap_UnInit(void)
