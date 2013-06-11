@@ -6,10 +6,12 @@
 */
 
 #include <SDL.h>
+#include <SDL_image.h>
 
 #include "main.h"
 #include "../m68000.h"
 #include "screen.h"
+#include "input.h"
 
 unsigned long VideoBase;                        /* Base address in ST Ram for screen(read on each VBL) */
 unsigned char *VideoRaster;                      /* Pointer to Video raster, after VideoBase in PC address space. Use to copy data on HBL */
@@ -25,6 +27,8 @@ static unsigned short CtrlRGBPalette[16];
 unsigned long logscreen, logscreen2, physcreen, physcreen2;
 
 SDL_Surface *sdlscrn;                             /* The SDL screen surface */
+static SDL_Surface *cursor;
+
 BOOL bGrabMouse = FALSE;                          /* Grab the mouse cursor in the window */
 BOOL bInFullScreen = FALSE;
 
@@ -59,19 +63,22 @@ static void change_vidmode ()
 
 void Screen_Init(void)
 {
+	SDL_ShowCursor(SDL_DISABLE);
+
 	change_vidmode ();
+
+	cursor = IMG_Load("cursor.png");
 	
 	/* Configure some SDL stuff: */
 	SDL_WM_SetCaption(PROG_NAME, "Frontier");
 	SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
 	SDL_EventState(SDL_MOUSEBUTTONDOWN, SDL_ENABLE);
 	SDL_EventState(SDL_MOUSEBUTTONUP, SDL_ENABLE);
-	SDL_ShowCursor(SDL_ENABLE);
 }
 
 void Screen_UnInit(void)
 {
-	SDL_FreeSurface(sdlscrn);
+	SDL_FreeSurface(cursor);
 }
 
 void Screen_ToggleFullScreen ()
@@ -328,11 +335,13 @@ void Nu_DrawScreen ()
 	BuildRGBPalette(MainRGBPalette, MainPalette, len_main_palette);
 	BuildRGBPalette(CtrlRGBPalette, CtrlPalette, 16);
 
-	if (mouse_shown) {
-		SDL_ShowCursor (SDL_ENABLE);
-		mouse_shown = 0;
-	} else
-		SDL_ShowCursor (SDL_DISABLE);
 	draw_control_panel ();
+
+	if (mouse_shown) {
+		SDL_Rect rect = { input.abs_x, input.abs_y, 0, 0 };
+		SDL_BlitSurface(cursor, NULL, sdlscrn, &rect);
+		mouse_shown = 0;
+	}
+
 	SDL_Flip(sdlscrn);
 }
