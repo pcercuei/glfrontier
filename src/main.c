@@ -122,7 +122,7 @@ void Main_EventHandler()
        break;
 	case SDL_JOYAXISMOTION:
 	   if (event.jaxis.axis <= 1)
-		   joystick_mouse_motion(event.jaxis.axis, event.jaxis.value);
+		   joystick_motion(event.jaxis.axis, event.jaxis.value);
 	   break;
 	case SDL_JOYBUTTONDOWN:
 	   Keymap_JoystickUpDown(event.jbutton.button, 1);

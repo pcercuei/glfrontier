@@ -194,7 +194,7 @@ void Keymap_JoystickUpDown(unsigned int button, int pressed)
 		Input_PressSTKey(code, pressed);
 }
 
-void joystick_mouse_motion(unsigned int axis, int value)
+void joystick_motion(unsigned int axis, int value)
 {
 	extern int delta_x, delta_y;
 
