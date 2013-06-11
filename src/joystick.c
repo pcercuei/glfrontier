@@ -8,6 +8,11 @@
 
 #define JS_NB_BUTTONS_MAX	16
 
+#define MODE_AVENTURE	0
+#define MODE_BATTLE		1
+#define MODE_MOUSE		2
+#define MODE_LAST		3
+
 /* Key mapping of the game */
 #define MOVE_UP		0x2c
 #define MOVE_DOWN	0x1e
@@ -45,12 +50,17 @@
 
 #define SPECIAL_TIME_DECREASE	0x10
 #define SPECIAL_TIME_INCREASE	0x11
+#define SPECIAL_SWITCH_MODE		0x18
 
 #define ARRAY_SIZE(s) \
   (sizeof(s) ? sizeof(s) / sizeof(s[0]) : 0)
 
 #define ACTION(_action) \
 	{ .action = #_action, .code = _action }
+
+static const char * const mode_names[] = {
+	"Aventure", "Battle", "Mouse",
+};
 
 static struct {
 	const char *action;
@@ -91,13 +101,16 @@ static struct {
 
 	ACTION(SPECIAL_TIME_DECREASE),
 	ACTION(SPECIAL_TIME_INCREASE),
+	ACTION(SPECIAL_SWITCH_MODE),
 };
 
 /* Joystick button to ST scan code mapping table */
-static int JoystickButtonToSTScanCode[JS_NB_BUTTONS_MAX];
+static int JoystickButtonToSTScanCode[MODE_LAST][JS_NB_BUTTONS_MAX];
+
+static unsigned char current_mode;
 
 
-static void read_key_config(struct INI *ini)
+static void read_key_config(struct INI *ini, unsigned char mode)
 {
 	for (;;) {
 		const char *key, *val;
@@ -120,7 +133,7 @@ static void read_key_config(struct INI *ini)
 		}
 
 		button = atoi(val);
-		JoystickButtonToSTScanCode[button] = code;
+		JoystickButtonToSTScanCode[mode][button] = code;
 	}
 }
 
@@ -136,8 +149,12 @@ void joystick_read_config(const char *path)
 		if (ini_next_section(ini, &name, &len) <= 0)
 			break;
 
-		if (!strncmp(name, "Key Config", len))
-			read_key_config(ini);
+		if (!strncmp(name, "Aventure Mode", len))
+			read_key_config(ini, MODE_AVENTURE);
+		else if (!strncmp(name, "Battle Mode", len))
+			read_key_config(ini, MODE_BATTLE);
+		else if (!strncmp(name, "Mouse Mode", len))
+			read_key_config(ini, MODE_MOUSE);
 		else
 			fprintf(stderr, "WARNING: Skip unsupported section in config file");
 	}
@@ -171,9 +188,19 @@ void Keymap_JoystickUpDown(unsigned int button, int pressed)
 	if (button > 16)
 		return;
 
-	code = JoystickButtonToSTScanCode[button];
+	code = JoystickButtonToSTScanCode[current_mode][button];
 	if (!code)
 		return;
+
+	if (code == SPECIAL_SWITCH_MODE) {
+		if (!pressed)
+			return;
+
+		if (++current_mode == MODE_LAST)
+			current_mode = 0;
+		printf("Switching to mode %s\n", mode_names[current_mode]);
+		return;
+	}
 
 	if (code == SPECIAL_TIME_INCREASE || code == SPECIAL_TIME_DECREASE) {
 		if (pressed) {
