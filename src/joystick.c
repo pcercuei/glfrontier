@@ -229,6 +229,14 @@ void joystick_motion(unsigned int axis, int value)
 	if (value == 3)
 		value++;
 
+	if (current_mode == MODE_MOUSE) {
+		if (axis == 0)
+			delta_x = value;
+		else
+			delta_y = value;
+		return;
+	}
+
 	if (!delta_x && !delta_y)
 		Input_MousePress(SDL_BUTTON_RIGHT);
 

@@ -161,6 +161,8 @@ void Main_EventHandler()
 
   input.motion_x += delta_x;
   input.motion_y += delta_y;
+  input.abs_x += input.motion_x;
+  input.abs_y += input.motion_y;
 
   Input_Update ();
 }
