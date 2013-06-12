@@ -223,7 +223,7 @@ void Keymap_JoystickUpDown(unsigned int button, int pressed)
 
 void joystick_motion(unsigned int axis, int value)
 {
-	extern int delta_x, delta_y;
+	extern int delta_x, delta_y, abs_delta_x, abs_delta_y;
 
 	value >>= 13;
 	if (value == 3)
@@ -231,9 +231,9 @@ void joystick_motion(unsigned int axis, int value)
 
 	if (current_mode == MODE_MOUSE) {
 		if (axis == 0)
-			delta_x = value;
+			abs_delta_x = value;
 		else
-			delta_y = value;
+			abs_delta_y = value;
 		return;
 	}
 

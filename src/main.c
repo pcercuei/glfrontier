@@ -40,7 +40,7 @@ char szCurrentDir[MAX_FILENAME_LENGTH] = { "" };
 
 extern enum RENDERERS use_renderer;
 
-int delta_x, delta_y;
+int delta_x, delta_y, abs_delta_x, abs_delta_y;
 
 /*-----------------------------------------------------------------------*/
 /*
@@ -103,6 +103,7 @@ void Main_UnPauseEmulation(void)
 void Main_EventHandler()
 {
   SDL_Event event;
+  int new_abs_x, new_abs_y;
 
   SDL_JoystickUpdate();
 
@@ -161,8 +162,14 @@ void Main_EventHandler()
 
   input.motion_x += delta_x;
   input.motion_y += delta_y;
-  input.abs_x += input.motion_x;
-  input.abs_y += input.motion_y;
+
+  new_abs_x = input.abs_x + abs_delta_x;
+  if (new_abs_x > 0 && new_abs_x < screen_w)
+	  input.abs_x = new_abs_x;
+
+  new_abs_y = input.abs_y + abs_delta_y;
+  if (new_abs_y > 0 && new_abs_y < screen_h)
+	  input.abs_y = new_abs_y;
 
   Input_Update ();
 }
