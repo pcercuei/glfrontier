@@ -62,7 +62,7 @@
 	{ .action = #_action, .code = _action }
 
 static const char * const mode_names[] = {
-	"Aventure", "Battle", "Mouse",
+	"Adventure", "Battle", "Mouse",
 };
 
 static struct {
@@ -115,6 +115,11 @@ static int JoystickButtonToSTScanCode[MODE_LAST][JS_NB_BUTTONS_MAX];
 
 static unsigned char current_mode = MODE_MOUSE;
 
+
+const char * mode_name(void)
+{
+	return mode_names[current_mode];
+}
 
 static void read_key_config(struct INI *ini, unsigned char mode)
 {
@@ -224,7 +229,7 @@ void Keymap_JoystickUpDown(unsigned int button, int pressed)
 
 		if (++current_mode == MODE_LAST)
 			current_mode = 0;
-		printf("Switching to mode %s\n", mode_names[current_mode]);
+		printf("Switching to mode %s\n", mode_name());
 		return;
 	}
 

@@ -332,8 +332,15 @@ void Nu_IsGLRenderer ()
 
 void Nu_DrawScreen ()
 {
+	int y;
+
 	BuildRGBPalette(MainRGBPalette, MainPalette, len_main_palette);
 	BuildRGBPalette(CtrlRGBPalette, CtrlPalette, 16);
+
+	y = logscreen2;
+	logscreen2 = physcreen;
+	DrawStr(280, 5, 15, mode_name(), 1);
+	logscreen2 = y;
 
 	draw_control_panel ();
 
