@@ -113,7 +113,7 @@ static struct {
 /* Joystick button to ST scan code mapping table */
 static int JoystickButtonToSTScanCode[MODE_LAST][JS_NB_BUTTONS_MAX];
 
-static unsigned char current_mode;
+static unsigned char current_mode = MODE_MOUSE;
 
 
 static void read_key_config(struct INI *ini, unsigned char mode)
