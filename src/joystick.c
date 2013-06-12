@@ -279,3 +279,8 @@ void joystick_motion(unsigned int axis, int value)
 	if (!delta_x && !delta_y)
 		Input_MouseRelease(SDL_BUTTON_RIGHT);
 }
+
+int in_mouse_mode(void)
+{
+	return current_mode == MODE_MOUSE;
+}

@@ -12,6 +12,7 @@
 #include "../m68000.h"
 #include "screen.h"
 #include "input.h"
+#include "joystick.h"
 
 unsigned long VideoBase;                        /* Base address in ST Ram for screen(read on each VBL) */
 unsigned char *VideoRaster;                      /* Pointer to Video raster, after VideoBase in PC address space. Use to copy data on HBL */
@@ -344,7 +345,7 @@ void Nu_DrawScreen ()
 
 	draw_control_panel ();
 
-	if (mouse_shown) {
+	if (mouse_shown && in_mouse_mode()) {
 		SDL_Rect rect = { input.abs_x, input.abs_y, 0, 0 };
 		SDL_BlitSurface(cursor, NULL, sdlscrn, &rect);
 		mouse_shown = 0;
