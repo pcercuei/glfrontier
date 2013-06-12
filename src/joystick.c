@@ -51,6 +51,9 @@
 #define SPECIAL_TIME_DECREASE	0x10
 #define SPECIAL_TIME_INCREASE	0x11
 #define SPECIAL_SWITCH_MODE		0x18
+#define SPECIAL_MOUSE_BTN_LEFT		0x19
+#define SPECIAL_MOUSE_BTN_MIDDLE	0x1a
+#define SPECIAL_MOUSE_BTN_RIGHT		0x1b
 
 #define ARRAY_SIZE(s) \
   (sizeof(s) ? sizeof(s) / sizeof(s[0]) : 0)
@@ -102,6 +105,9 @@ static struct {
 	ACTION(SPECIAL_TIME_DECREASE),
 	ACTION(SPECIAL_TIME_INCREASE),
 	ACTION(SPECIAL_SWITCH_MODE),
+	ACTION(SPECIAL_MOUSE_BTN_LEFT),
+	ACTION(SPECIAL_MOUSE_BTN_MIDDLE),
+	ACTION(SPECIAL_MOUSE_BTN_RIGHT),
 };
 
 /* Joystick button to ST scan code mapping table */
@@ -191,6 +197,26 @@ void Keymap_JoystickUpDown(unsigned int button, int pressed)
 	code = JoystickButtonToSTScanCode[current_mode][button];
 	if (!code)
 		return;
+
+	if (code == SPECIAL_MOUSE_BTN_LEFT) {
+		if (pressed)
+			Input_MousePress(SDL_BUTTON_LEFT);
+		else
+			Input_MouseRelease(SDL_BUTTON_LEFT);
+		return;
+	} else if (code == SPECIAL_MOUSE_BTN_RIGHT) {
+		if (pressed)
+			Input_MousePress(SDL_BUTTON_RIGHT);
+		else
+			Input_MouseRelease(SDL_BUTTON_RIGHT);
+		return;
+	} else if (code == SPECIAL_MOUSE_BTN_MIDDLE) {
+		if (pressed)
+			Input_MousePress(SDL_BUTTON_MIDDLE);
+		else
+			Input_MouseRelease(SDL_BUTTON_MIDDLE);
+		return;
+	}
 
 	if (code == SPECIAL_SWITCH_MODE) {
 		if (!pressed)
