@@ -27,7 +27,7 @@ static unsigned short CtrlRGBPalette[16];
 
 unsigned long logscreen, logscreen2, physcreen, physcreen2;
 
-SDL_Surface *sdlscrn;                             /* The SDL screen surface */
+static SDL_Surface *sdlscrn;                             /* The SDL screen surface */
 static SDL_Surface *cursor;
 
 BOOL bGrabMouse = FALSE;                          /* Grab the mouse cursor in the window */

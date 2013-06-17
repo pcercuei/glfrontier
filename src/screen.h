@@ -15,7 +15,6 @@ extern unsigned char *VideoRaster;
 
 extern int fe2_bgcol;
 
-extern SDL_Surface *sdlscrn;
 extern BOOL bGrabMouse;
 extern BOOL bInFullScreen;
 enum RENDERERS {
