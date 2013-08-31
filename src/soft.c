@@ -232,6 +232,11 @@ int DrawStr (int xpos, int ypos, int col, unsigned char *str, bool shadowed)
 
 	x = xpos;
 	y = ypos;
+
+	/* this little hack makes sure that the currentTimeMode
+	 * is synchronized with the game */
+	if (!strcmp((char *) str + 1, "Arrived in vicinity of target"))
+		currentTimeMode = 1;
 	
 	if ((y > 192) || (y<0)) return x;
 set_line:

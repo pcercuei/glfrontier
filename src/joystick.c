@@ -61,6 +61,8 @@
 #define ACTION(_action) \
 	{ .action = #_action, .code = _action }
 
+int currentTimeMode = 1;
+
 static const char * const mode_names[] = {
 	"Adventure", "Battle", "Mouse",
 };
@@ -192,7 +194,6 @@ static void inject_mouse_event(unsigned int x, unsigned int y, int pressed)
 
 void Keymap_JoystickUpDown(unsigned int button, int pressed)
 {
-	static int currentTimeMode = 1;
 	static unsigned int button_already_pressed;
 	char code;
 
