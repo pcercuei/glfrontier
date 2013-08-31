@@ -5,11 +5,14 @@ SRCOBJS := audio.o hostcall.o keymap.o main.o shortcut.o input.o joystick.o
 
 COMPILER ?= gcc
 CC := $(CROSS_COMPILE)$(COMPILER)
-CFLAGS := -O3 -fomit-frame-pointer -Wall -Wno-unused -s \
-	`sdl-config --cflags` -DOGG_MUSIC
 
-LIBS := -lvorbisfile -lvorbis -logg -lini \
-	`sdl-config --libs` -lSDL_image
+SDL_CONFIG := $(shell $(CC) --print-sysroot)/usr/bin/sdl-config
+SDL_CFLAGS := $(shell $(SDL_CONFIG) --cflags)
+SDL_LIBS := $(shell $(SDL_CONFIG) --libs)
+
+CFLAGS := -O3 -fomit-frame-pointer -Wall -Wno-unused $(SDL_CFLAGS) -DOGG_MUSIC
+
+LIBS := -lvorbisfile -lvorbis -logg -lini $(SDL_LIBS) -lSDL_image
 
 WITH_GL=y
 ifeq ($(WITH_GL),y)
