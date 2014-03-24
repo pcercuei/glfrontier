@@ -5,7 +5,7 @@ extern int exceptions_pending;
 int main ()
 {
 	if (!Init680x0 ()) {
-		printf ("Error loading poop.cunt\n");
+		printf ("Error loading\n");
 	}
 	//FlagException (0);
 	//printf ("P 0x%x\n", exceptions_pending);
