@@ -2261,8 +2261,7 @@ int main (int argc, char **argv)
 	}
 	
 	src_filename = argv[arg];
-	errno_t err;
-	if ((err = fopen_s (&fin, src_filename, "r"))!=0) {
+	if ((fopen_s (&fin, src_filename, "r"))!=0) {
 		printf ("Error. Cannot open %s.\n", src_filename);
 		exit (0);
 	}

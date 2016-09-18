@@ -208,8 +208,7 @@ void i386_begin (const char *src_filename, const char *bin_filename)
 {
 	char buf[128];
 	snprintf (buf, sizeof (buf), ".%s.S", src_filename);
-	errno_t err;
-	if ((err = fopen_s (&asm_out, buf, "w"))!=0) {
+	if ((fopen_s (&asm_out, buf, "w"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
@@ -541,8 +540,7 @@ void i386_end (const char *src_filename)
 	fclose (asm_out);
 
 	snprintf (buf, sizeof (buf), "%s.S", src_filename);
-	errno_t err;
-	if ((err = fopen_s (&asm_out, buf, "w"))!=0) {
+	if ((fopen_s (&asm_out, buf, "w"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
@@ -634,7 +632,7 @@ void i386_end (const char *src_filename)
 	
 	/* the code we made */
 	snprintf (buf, sizeof (buf), ".%s.S", src_filename);
-	if ((err = fopen_s (&f, buf, "r"))!=0) {
+	if ((fopen_s (&f, buf, "r"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
