@@ -164,7 +164,7 @@ void c_begin (const char *src_filename, const char *bin_filename)
 	cout ("int Init680x0 () {\n");
 	cln ("STRam = &m68kram[0];");
 	cln ("load_binfile (\"%s\");", bin_filename);
-	cld("return 0;\n");
+	cln ("return 0;\n");
 	cout ("}\n");
 	
 	cout ("void Start680x0 ()\n{\n");
@@ -191,8 +191,8 @@ void c_end (const char *src_filename)
 
 	fclose (c_out);
 
+	snprintf(buf, sizeof(buf), ".%s.h", src_filename);
 	errno_t err;
-	snprintf (buf, sizeof (buf), "%s.c", src_filename);
 	if ((err = fopen_s (&c_out, buf, "w"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
@@ -221,7 +221,7 @@ void c_end (const char *src_filename)
 	fclose(c_out);
 	
 	snprintf(buf, sizeof(buf), "%s.c", src_filename);
-	if ((c_out = fopen(buf, "w")) == NULL) {
+	if ((err = fopen_s(&c_out, buf, "w")) != 0) {
 		fprintf(stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit(-1);
 	}
@@ -572,11 +572,12 @@ static void c_fnbegin ()
 	add_fixup (0, C_FUNC, pending_func_name);
 	SWAP_COUT;
 
-	strncpy(short_name, pending_func_name, sizeof(short_name) - 1);
+	strncpy_s (short_name, sizeof(short_name) - 1, pending_func_name, sizeof(short_name) - 1);
 	short_name[sizeof(short_name) - 1] = '\0';
 	
 	snprintf(buf, sizeof(buf), "gen/%s.c", short_name);
-	if ((c_out = fopen(buf, "a")) == NULL) {
+	errno_t err;
+	if ((err = fopen_s (&c_out, buf, "a")) != 0) {
 		fprintf(stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit(-1);
 	}
