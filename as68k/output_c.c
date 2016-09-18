@@ -155,15 +155,20 @@ void c_begin (const char *src_filename, const char *bin_filename)
 {
 	char buf[128];
 	snprintf (buf, sizeof (buf), ".%s.c", src_filename);
-	if ((c_out = fopen (buf, "w"))==NULL) {
+	errno_t err;
+	if ((err = fopen_s (&c_out, buf, "w"))!=0) {
+		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
+		exit (-1);
+	}
+	snprintf (buf, sizeof (buf), ".%s.fn.c", src_filename);
+	if ((err = fopen_s (&c_out2, buf, "w"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
 
-	cout ("int Init680x0 () {\n");
+	cout ("void Init680x0 () {\n");
 	cln ("STRam = &m68kram[0];");
 	cln ("load_binfile (\"%s\");", bin_filename);
-	cln ("return 0;\n");
 	cout ("}\n");
 	
 	cout ("void Start680x0 ()\n{\n");
@@ -189,22 +194,28 @@ void c_end (const char *src_filename)
 	}
 
 	fclose (c_out);
+	fclose (c_out2);
 
-	snprintf (buf, sizeof (buf), "fixups.h", src_filename);
-	if ((c_out = fopen (buf, "w"))==NULL) {
+	errno_t err;
+	snprintf (buf, sizeof (buf), "%s.c", src_filename);
+	if ((err = fopen_s (&c_out, buf, "w"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
+
+	/* _host.c contains much necessary boilerplate code. include it */
+	cout ("#include \"_host.c\"\n");
 	
 	/* call prototype turds */
+	cout ("#ifdef PART1\n");
 	fix = fix_first;
 	for (; fix != NULL; fix = fix->next) {
 		if (fix->size == C_FUNC) {
-			cout ("void %s ();\n", fix->label);
+			cout ("extern void %s ();\n", fix->label);
 			continue;
 		}
 	}
-
+	cout ("#endif /* PART1 */\n");
 	/* address 'fixups' */
 	fix = fix_first;
 	for (; fix != NULL; fix = fix->next) {
@@ -217,22 +228,10 @@ void c_end (const char *src_filename)
 		}
 		cout ("#define __D%s (0x%x)\n", lab->name, lab->val+BASE);
 	}
-	fclose(c_out);
 
-	snprintf (buf, sizeof (buf), "%s.c", src_filename);
-	if ((c_out = fopen (buf, "w"))==NULL) {
-		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
-		exit (-1);
-	}
-
-	/* host.h contains much necessary boilerplate code. include it */
-	cout ("#include \"host.h\"\n");
-	cout ("#include \"fixups.h\"\n");
-
-#if 0
 	/* the code we made */
-	snprintf (buf, sizeof (buf), "%s.fn.c", src_filename);
-	if ((f = fopen (buf, "r"))==NULL) {
+	snprintf (buf, sizeof (buf), ".%s.fn.c", src_filename);
+	if ((err = fopen_s (&f, buf, "r"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
@@ -241,13 +240,13 @@ void c_end (const char *src_filename)
 	fclose (f);
 	remove (buf);
 	cout ("#endif /* PART2 */\n");
-#endif
 
 	snprintf (buf, sizeof (buf), ".%s.c", src_filename);
-	if ((f = fopen (buf, "r"))==NULL) {
+	if ((err = fopen_s (&f, buf, "r"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
+	cout ("#ifdef PART1\n");
 	while ((c = fgetc (f)) != EOF) fputc (c, c_out);
 	fclose (f);
 	remove (buf);
@@ -280,6 +279,7 @@ void c_end (const char *src_filename)
 	cln ("goto jumptable;\n");
 	
 	cout ("end_:\treturn;\n}\n");
+	cout ("#endif /* PART1 */\n");
 
 	fclose (c_out);
 	
@@ -314,35 +314,35 @@ static void c_ea_get_address (ea_t *ea, char *buf)
 		case 0: case 1: assert (0);
 		/* areg indirect, postinc */
 		case 2: case 3: 
-			sprintf (buf, "(Regs[%d]._s32)", ea->reg); break;
+			sprintf_s (buf, sizeof(buf), "(Regs[%d]._s32)", ea->reg); break;
 		/* areg predec */
 		case 4: 
 			inc = 1<<ea->op_size;
 			/* stack pointer always by 2 */
 			if ((ea->reg == 15) && (inc == 1)) inc = 2;
 			
-			sprintf (buf, "(Regs[%d]._s32-%d)", ea->reg, inc);
+			sprintf_s (buf, sizeof(buf), "(Regs[%d]._s32-%d)", ea->reg, inc);
 			break;
 		/* areg offset */
 		case 5:
-			sprintf (buf, "(Regs[%d]._s32%+d)", ea->reg, ea->imm.val);
+			sprintf_s (buf, sizeof(buf), "(Regs[%d]._s32%+d)", ea->reg, ea->imm.val);
 			break;
 		/* areg offset + reg */
 		case 6:
-			sprintf (buf, "(Regs[%d]._s32+((%s)Regs[%d]._s32)%+d)", ea->reg, (ea->ext._.size ? "s32" : "s16"), ea->ext._.reg + (ea->ext._.d_or_a ? 8 : 0), ea->ext._.displacement);
+			sprintf_s (buf, sizeof(buf), "(Regs[%d]._s32+((%s)Regs[%d]._s32)%+d)", ea->reg, (ea->ext._.size ? "s32" : "s16"), ea->ext._.reg + (ea->ext._.d_or_a ? 8 : 0), ea->ext._.displacement);
 			break;
 		/* yes */
 		case 7:
 			/* $xxx.w */
 			if (ea->reg == 0) {
-				sprintf (buf, "(%d)", ea->imm.val);
+				sprintf_s (buf, sizeof(buf), "(%d)", ea->imm.val);
 			}
 			/* $xxx.l */
 			else if (ea->reg == 1) {
 				if (ea->imm.has_label) {
-					sprintf (buf, "(__D%s)", ea->imm.label);
+					sprintf_s (buf, sizeof(buf), "(__D%s)", ea->imm.label);
 				} else {
-					sprintf (buf, "(%d)", ea->imm.val);
+					sprintf_s (buf, sizeof(buf), "(%d)", ea->imm.val);
 				}
 			}
 			/* immediate */
@@ -352,14 +352,14 @@ static void c_ea_get_address (ea_t *ea, char *buf)
 			/* PC + offset */
 			else if (ea->reg == 2) {
 				if (ea->imm.has_label)
-					sprintf (buf, "__D%s", ea->imm.label);
+					sprintf_s (buf, sizeof(buf), "__D%s", ea->imm.label);
 				else
 					error ("Absolute value not allowed.");
 			}
 			/* PC + INDEX + OFFSET */
 			else if (ea->reg == 3) {
 				if (!ea->imm.has_label) error ("Absolute value not allowed.");
-				sprintf (buf, "(__D%s + Regs[%d]._%s)",
+				sprintf_s (buf, sizeof(buf), "(__D%s + Regs[%d]._%s)",
 						ea->imm.label,
 						ea->ext._.reg + (ea->ext._.d_or_a ? 8 : 0),
 						(ea->ext._.size ? "s32" : "s16"));
@@ -376,15 +376,15 @@ static void c_readea (ea_t *ea, char *buf)
 		/* dreg, areg */
 		case 0:
 		case 1:
-			sprintf (buf, "Regs[%d]._%s", ea->reg, c_ssizes[ea->op_size]);
+			sprintf_s (buf, sizeof(buf), "Regs[%d]._%s", ea->reg, c_ssizes[ea->op_size]);
 			break;
 		/* areg indirect */
 		case 2:
-			sprintf (buf, "%s(Regs[%d]._s32)", mem_read_funcs[ea->op_size], ea->reg);
+			sprintf_s (buf, sizeof(buf), "%s(Regs[%d]._s32)", mem_read_funcs[ea->op_size], ea->reg);
 			break;
 		/* areg postinc */
 		case 3:
-			sprintf (buf, "%s(Regs[%d]._s32)", mem_read_funcs[ea->op_size], ea->reg);
+			sprintf_s (buf, sizeof(buf), "%s(Regs[%d]._s32)", mem_read_funcs[ea->op_size], ea->reg);
 			break;
 		/* areg predec */
 		case 4:
@@ -392,49 +392,49 @@ static void c_readea (ea_t *ea, char *buf)
 			/* stack pointer always by 2 */
 			if ((ea->reg == 15) && (inc == 1)) inc = 2;
 			
-			sprintf (buf, "%s(Regs[%d]._s32-%d)", mem_read_funcs[ea->op_size], ea->reg, inc);
+			sprintf_s (buf, sizeof(buf), "%s(Regs[%d]._s32-%d)", mem_read_funcs[ea->op_size], ea->reg, inc);
 			break;
 		/* areg offset */
 		case 5:
-			sprintf (buf, "%s(Regs[%d]._s32%+d)", mem_read_funcs[ea->op_size], ea->reg, ea->imm.val);
+			sprintf_s (buf, sizeof(buf), "%s(Regs[%d]._s32%+d)", mem_read_funcs[ea->op_size], ea->reg, ea->imm.val);
 			break;
 		/* areg offset + reg */
 		case 6:
-			sprintf (buf, "%s(Regs[%d]._s32+((%s)Regs[%d]._s32)%+d)", mem_read_funcs[ea->op_size], ea->reg, (ea->ext._.size ? "s32" : "s16"), ea->ext._.reg + (ea->ext._.d_or_a ? 8 : 0), ea->ext._.displacement);
+			sprintf_s (buf, sizeof(buf), "%s(Regs[%d]._s32+((%s)Regs[%d]._s32)%+d)", mem_read_funcs[ea->op_size], ea->reg, (ea->ext._.size ? "s32" : "s16"), ea->ext._.reg + (ea->ext._.d_or_a ? 8 : 0), ea->ext._.displacement);
 			break;
 		/* yes */
 		case 7:
 			/* $xxx.w */
 			if (ea->reg == 0) {
-				sprintf (buf, "%s(%d)", mem_read_funcs[ea->op_size], ea->imm.val);
+				sprintf_s (buf, sizeof(buf), "%s(%d)", mem_read_funcs[ea->op_size], ea->imm.val);
 			}
 			/* $xxx.l */
 			else if (ea->reg == 1) {
 				if (ea->imm.has_label) {
-					sprintf (buf, "%s(__D%s)", mem_read_funcs[ea->op_size], ea->imm.label);
+					sprintf_s (buf, sizeof(buf), "%s(__D%s)", mem_read_funcs[ea->op_size], ea->imm.label);
 				} else {
-					sprintf (buf, "%s(%d)", mem_read_funcs[ea->op_size], ea->imm.val);
+					sprintf_s (buf, sizeof(buf), "%s(%d)", mem_read_funcs[ea->op_size], ea->imm.val);
 				}
 			}
 			/* immediate */
 			else if (ea->reg == 4) {
 				if (ea->imm.has_label) {
-					sprintf (buf, "__D%s", ea->imm.label);
+					sprintf_s (buf, sizeof(buf), "__D%s", ea->imm.label);
 				} else {
-					sprintf (buf, "%d", ea->imm.val);
+					sprintf_s (buf, sizeof(buf), "%d", ea->imm.val);
 				}
 			}
 			/* PC + offset */
 			else if (ea->reg == 2) {
 				if (ea->imm.has_label)
-					sprintf (buf, "%s(__D%s)", mem_read_funcs[ea->op_size], ea->imm.label);
+					sprintf_s (buf, sizeof(buf), "%s(__D%s)", mem_read_funcs[ea->op_size], ea->imm.label);
 				else
 					error ("Absolute value not allowed.");
 			}
 			/* PC + INDEX + OFFSET */
 			else if (ea->reg == 3) {
 				if (!ea->imm.has_label) error ("Absolute value not allowed.");
-				sprintf (buf, "%s(__D%s + Regs[%d]._%s)",
+				sprintf_s (buf, sizeof(buf), "%s(__D%s + Regs[%d]._%s)",
 						mem_read_funcs[ea->op_size],
 						ea->imm.label,
 						ea->ext._.reg + (ea->ext._.d_or_a ? 8 : 0),
@@ -565,25 +565,8 @@ static void make_funcname (char *buf, int len)
 
 static void c_fnbegin ()
 {
-	char buf[128];
-	char short_name[7];
 	add_fixup (0, C_FUNC, pending_func_name);
 	SWAP_COUT;
-
-	strncpy(short_name, pending_func_name, sizeof(short_name) - 1);
-	short_name[sizeof(short_name) - 1] = '\0';
-
-	snprintf (buf, sizeof (buf), "gen/%s.c", short_name);
-	if ((c_out = fopen (buf, "a"))==NULL) {
-		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
-		exit (-1);
-	}
-
-	if (!ftell(c_out)) {
-		cout ("#include \"../host.h\"\n");
-		cout ("#include \"../fixups.h\"\n");
-	}
-
 	num_funcs++;
 	cout ("void %s ()\n", pending_func_name);
 	cout ("{\n");
@@ -592,7 +575,6 @@ static void c_fnbegin ()
 static void c_fnend ()
 {
 	cout ("}\n");
-	fclose(c_out);
 	SWAP_COUT;
 }
 

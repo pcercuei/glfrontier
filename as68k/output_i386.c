@@ -144,7 +144,7 @@ static void set_line (int num)
 	char buf[256];
 
 	snprintf (buf, sizeof (buf), "	movl	$%d, line_no\n", num);
-	strcat (cur_labels, buf);
+	strcat_s (cur_labels, sizeof(buf), buf);
 }
 #endif
 
@@ -160,7 +160,7 @@ void i386_label (const char *lab)
 	cur_flush = 1;
 	
 	snprintf (buf, sizeof (buf), "__N%s:\n", lab);
-	strcat (cur_labels, buf);
+	strcat_s (cur_labels, sizeof(buf), buf);
 
 	add_fixup (0, C_ADDR, lab);
 }
@@ -178,11 +178,11 @@ void i386_addr_label (int labelled)
 		add_fixup (get_bitpos (), C_ADDR, buf);
 	
 		snprintf (buf, sizeof (buf), "__l%x:\n", get_bitpos ());
-		strcat (cur_labels, buf);
+		strcat_s (cur_labels, sizeof(buf), buf);
 	} else {
 #ifdef GEN_DEBUG
 		snprintf (buf, sizeof (buf), "/* 0x%x */\n", get_bitpos ());
-		strcat (cur_labels, buf);
+		strcat_s (cur_labels, sizeof(buf), buf);
 #endif
 	}
 	
@@ -192,7 +192,7 @@ void i386_addr_label (int labelled)
 	set_line (line_no);
 
 #ifdef DUMP_LOADS_OF_CRAP
-	strcat (cur_labels, "	call DumpRegsChanged\n");
+	strcat_s (cur_labels, "	call DumpRegsChanged\n");
 #endif /* DUMP_LOADS_OF_CRAP */
 #endif /* GEN_DEBUG */
 }
@@ -208,7 +208,8 @@ void i386_begin (const char *src_filename, const char *bin_filename)
 {
 	char buf[128];
 	snprintf (buf, sizeof (buf), ".%s.S", src_filename);
-	if ((asm_out = fopen (buf, "w"))==NULL) {
+	errno_t err;
+	if ((err = fopen_s (&asm_out, buf, "w"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
@@ -540,7 +541,8 @@ void i386_end (const char *src_filename)
 	fclose (asm_out);
 
 	snprintf (buf, sizeof (buf), "%s.S", src_filename);
-	if ((asm_out = fopen (buf, "w"))==NULL) {
+	errno_t err;
+	if ((err = fopen_s (&asm_out, buf, "w"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
@@ -632,7 +634,7 @@ void i386_end (const char *src_filename)
 	
 	/* the code we made */
 	snprintf (buf, sizeof (buf), ".%s.S", src_filename);
-	if ((f = fopen (buf, "r"))==NULL) {
+	if ((err = fopen_s (&f, buf, "r"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
@@ -3404,7 +3406,7 @@ static void do_pending ()
 	}
 	pending_labels = cur_labels;
 	cur_labels = calloc (LABBUF_LEN, 1);
-	strcat (cur_labels, "\n");
+	strcat_s (cur_labels, sizeof("\n"), "\n");
 	
 	if (pending.optype) output_op (&pending, NULL);
 }

@@ -59,7 +59,7 @@ void add_fixup (int adr, int size, const char *label)
 	fix->next = NULL;
 	fix->rel_to = (last_op_addr + 2) - BASE;
 	fix->line_no = line_no;
-	strcpy (fix->label, label);
+	strcpy_s (fix->label, sizeof(label), label);
 	if (fix_first == NULL)  fix_first = fix;
 	if (fix_last == NULL) fix_last = fix;
 	else {
@@ -75,7 +75,7 @@ void add_fixup_rel_to (int adr, int size, const char *label, int rel_to)
 	fix->next = NULL;
 	fix->rel_to = rel_to;
 	fix->line_no = line_no;
-	strcpy (fix->label, label);
+	strcpy_s (fix->label, sizeof(label), label);
 	if (fix_first == NULL)  fix_first = fix;
 	if (fix_last == NULL) fix_last = fix;
 	else {
@@ -187,7 +187,7 @@ char *rd_label (char *buf, char *lab_buf)
 	*pos = '\0';
 
 	if (strlen (buf) > LAB_LEN-1) error ("Label too long.");
-	strncpy (lab_buf, buf, LAB_LEN);
+	strncpy_s (lab_buf, sizeof(buf), buf, LAB_LEN);
 	lab_buf[LAB_LEN-1] = '\0';
 	*pos = snipped;
 	return pos;
@@ -224,11 +224,11 @@ char *get_imm (char *buf, struct ImmVal *imm, int flags)
 	if (*buf == '$') {
 		/* hex value */
 		buf++;
-		if (sscanf (&buf[0], "%x", &imm->val) != 1) goto err;
+		if (sscanf_s (&buf[0], "%x", &imm->val) != 1) goto err;
 		while (isxdigit (*buf)) buf++;
 	} else if (isdigit (*buf) || (*buf == '-')) {
 		/* dec value */
-		if (sscanf (&buf[0], "%d", &imm->val) != 1) goto err;
+		if (sscanf_s (&buf[0], "%d", &imm->val) != 1) goto err;
 		if (*buf == '-') buf++;
 		while (isdigit (*buf)) buf++;
 	} else if (isalpha (*buf)) {
@@ -334,7 +334,7 @@ char *get_reg (char *buf, int *reg_num, int flags)
 	else if ((flags & F_DREG) && (buf[0] == 'd')) type = 0;
 	else goto err;
 	buf++;
-	if (sscanf (&buf[0], "%d", reg_num) != 1) goto err;
+	if (sscanf_s (&buf[0], "%d", reg_num) != 1) goto err;
 	
 	*reg_num += type;
 	while (isdigit (*buf)) buf++;
@@ -355,7 +355,7 @@ char *get_ea (char *pos, ea_t *ea, int op_size, int flags)
 	orig = pos;
 	if ((pos[0] == 'd') && isdigit (pos[1])) {
 		pos++;
-		if (sscanf (&pos[0], "%d", &ea->reg) != 1) goto poopdog;
+		if (sscanf_s (&pos[0], "%d", &ea->reg) != 1) goto poopdog;
 		ea->mode = 0;
 		if ((ea->reg < 0) || (ea->reg > 7)) goto poopdog;
 		while (isdigit (*pos)) pos++;
@@ -364,7 +364,7 @@ char *get_ea (char *pos, ea_t *ea, int op_size, int flags)
 	}
 	if ((pos[0] == 'a') && isdigit (pos[1])) {
 		pos++;
-		if (sscanf (&pos[0], "%d", &ea->reg) != 1) goto poopdog;
+		if (sscanf_s (&pos[0], "%d", &ea->reg) != 1) goto poopdog;
 		ea->mode = 1;
 		if ((ea->reg < 0) || (ea->reg > 7)) goto poopdog;
 		ea->reg += 8;
@@ -405,10 +405,10 @@ poopdog:
 			pos = get_imm (pos, &ea->imm, 0);
 		} else if (*pos == '$') {
 			pos++;
-			if (sscanf (pos, "%x", &ea->imm.val) != 1) goto err;
+			if (sscanf_s (pos, "%x", &ea->imm.val) != 1) goto err;
 			while (isxdigit (*pos)) pos++;
 		} else {
-			if (sscanf (pos, "%d", &ea->imm.val) != 1) goto err;
+			if (sscanf_s (pos, "%d", &ea->imm.val) != 1) goto err;
 			if (*pos == '-') pos++;
 			while (isdigit (*pos)) pos++;
 		}
@@ -528,7 +528,7 @@ int _reg_num (char *cunt)
 	else is_areg = 0;
 	cunt++;
 
-	if (sscanf (cunt, "%d", &num) != 1) return -1;
+	if (sscanf_s (cunt, "%d", &num) != 1) return -1;
 	num += is_areg;
 
 	while (isdigit (*cunt)) cunt++;
@@ -568,7 +568,7 @@ mess:
 		if (*pos == '-') {
 			/* range of fucking registers */
 			pos++;
-			if (sscanf (pos, "%d", &hi) != 1) goto err;
+			if (sscanf_s (pos, "%d", &hi) != 1) goto err;
 			pos++;
 			if ((hi < 0) || (hi > 7)) goto err;
 			if (lo > 7) hi += 8;
@@ -2261,13 +2261,14 @@ int main (int argc, char **argv)
 	}
 	
 	src_filename = argv[arg];
-	if ((fin = fopen (src_filename, "r"))==NULL) {
+	errno_t err;
+	if ((err = fopen_s (&fin, src_filename, "r"))!=0) {
 		printf ("Error. Cannot open %s.\n", src_filename);
 		exit (0);
 	}
 
 	snprintf (bin_filename, sizeof (bin_filename), "%s.bin", src_filename);
-	fout = fopen (bin_filename, "wb");
+	fopen_s (&fout, bin_filename, "wb");
 
 	fprintf (stderr, "Pass 1\n");
 	size = asm_pass1 (bin_filename);
