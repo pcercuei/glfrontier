@@ -160,15 +160,11 @@ void c_begin (const char *src_filename, const char *bin_filename)
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
 		exit (-1);
 	}
-	snprintf (buf, sizeof (buf), ".%s.fn.c", src_filename);
-	if ((err = fopen_s (&c_out2, buf, "w"))!=0) {
-		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
-		exit (-1);
-	}
 
-	cout ("void Init680x0 () {\n");
+	cout ("int Init680x0 () {\n");
 	cln ("STRam = &m68kram[0];");
 	cln ("load_binfile (\"%s\");", bin_filename);
+	cld("return 0;\n");
 	cout ("}\n");
 	
 	cout ("void Start680x0 ()\n{\n");
@@ -194,7 +190,6 @@ void c_end (const char *src_filename)
 	}
 
 	fclose (c_out);
-	fclose (c_out2);
 
 	errno_t err;
 	snprintf (buf, sizeof (buf), "%s.c", src_filename);
@@ -203,19 +198,14 @@ void c_end (const char *src_filename)
 		exit (-1);
 	}
 
-	/* _host.c contains much necessary boilerplate code. include it */
-	cout ("#include \"_host.c\"\n");
-	
 	/* call prototype turds */
-	cout ("#ifdef PART1\n");
 	fix = fix_first;
 	for (; fix != NULL; fix = fix->next) {
 		if (fix->size == C_FUNC) {
-			cout ("extern void %s ();\n", fix->label);
+			cout ("void %s ();\n", fix->label);
 			continue;
 		}
 	}
-	cout ("#endif /* PART1 */\n");
 	/* address 'fixups' */
 	fix = fix_first;
 	for (; fix != NULL; fix = fix->next) {
@@ -228,7 +218,19 @@ void c_end (const char *src_filename)
 		}
 		cout ("#define __D%s (0x%x)\n", lab->name, lab->val+BASE);
 	}
+	fclose(c_out);
+	
+	snprintf(buf, sizeof(buf), "%s.c", src_filename);
+	if ((c_out = fopen(buf, "w")) == NULL) {
+		fprintf(stderr, "Error: Cannot open %s for writing.\n", buf);
+		exit(-1);
+	}
 
+	/* host.h contains much necessary boilerplate code. include it */
+	cout("#include \"host.h\"\n");
+	cout("#include \"fixups.h\"\n");
+
+#if 0
 	/* the code we made */
 	snprintf (buf, sizeof (buf), ".%s.fn.c", src_filename);
 	if ((err = fopen_s (&f, buf, "r"))!=0) {
@@ -240,7 +242,7 @@ void c_end (const char *src_filename)
 	fclose (f);
 	remove (buf);
 	cout ("#endif /* PART2 */\n");
-
+#endif
 	snprintf (buf, sizeof (buf), ".%s.c", src_filename);
 	if ((err = fopen_s (&f, buf, "r"))!=0) {
 		fprintf (stderr, "Error: Cannot open %s for writing.\n", buf);
@@ -565,8 +567,25 @@ static void make_funcname (char *buf, int len)
 
 static void c_fnbegin ()
 {
+	char buf[128];
+	char short_name[7];
 	add_fixup (0, C_FUNC, pending_func_name);
 	SWAP_COUT;
+
+	strncpy(short_name, pending_func_name, sizeof(short_name) - 1);
+	short_name[sizeof(short_name) - 1] = '\0';
+	
+	snprintf(buf, sizeof(buf), "gen/%s.c", short_name);
+	if ((c_out = fopen(buf, "a")) == NULL) {
+		fprintf(stderr, "Error: Cannot open %s for writing.\n", buf);
+		exit(-1);
+	}
+	
+	if (!ftell(c_out)) {
+		cout("#include \"../host.h\"\n");
+		cout("#include \"../fixups.h\"\n");
+	}
+	
 	num_funcs++;
 	cout ("void %s ()\n", pending_func_name);
 	cout ("{\n");
@@ -575,6 +594,7 @@ static void c_fnbegin ()
 static void c_fnend ()
 {
 	cout ("}\n");
+	fclose(c_out);
 	SWAP_COUT;
 }
 
