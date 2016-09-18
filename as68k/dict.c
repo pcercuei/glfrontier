@@ -69,7 +69,7 @@ static void free_node (struct Node *node)
 static void set_node (struct Node *node, const char *key, void *obj)
 {
 	node->key = (char *) malloc (strlen(key)+1);
-	strcpy (node->key, key);
+	strcpy_s (node->key, sizeof(key), key);
 	node->obj = obj;
 }
 
